@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* ===============================
+   Лаунчерные цвета (светлая тема)
+   =============================== */
+:root {
+  --color-bg: #ffffff;
+  --color-text: #0a0a0a;
+  --color-text-gray: #52525b;
+  --color-card-bg: #fafafa;
+  --color-border-sharp: #e4e4e7;
+  --color-panel-bg: #f4f4f5;
+  --color-panel-border: #e4e4e7;
+  --color-panel-hover: #e4e4e7;
+  --color-accent-blue: #2563eb;
+  --color-glow-blue: #3b82f6;
+}
+
+.dark {
+  --color-bg: #09090b;
+  --color-text: #fafafa;
+  --color-text-gray: #a1a1aa;
+  --color-card-bg: #18181b;
+  --color-border-sharp: #27272a;
+  --color-panel-bg: #18181b;
+  --color-panel-border: #27272a;
+  --color-panel-hover: #27272a;
+  --color-accent-blue: #3b82f6;
+  --color-glow-blue: #3b82f6;
+}
+
+/* ===============================
+   Подключаем Tailwind-переменные
+   =============================== */
+@theme {
+  --color-app-bg: var(--color-bg);
+  --color-app-fg: var(--color-text);
+  --color-muted-fg: var(--color-text-gray);
+  --color-border: var(--color-border-sharp);
+  --color-accent: var(--color-accent-blue);
+  --color-card-bg: var(--color-card-bg);
+  --color-panel-bg: var(--color-panel-bg);
+  --color-panel-border: var(--color-panel-border);
+  --color-panel-soft-border: var(--color-panel-soft-border);
+  --color-panel-hover: var(--color-panel-hover);
+  --color-glow: var(--color-glow-blue);
+}
+
+body {
+  background-color: var(--color-app-bg);
+  color: var(--color-app-fg);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+* {
+  border-color: var(--color-border);
+  transition: border-color 0.3s;
+}
+
+/* ===============================
+   Для карточек и панелей
+   =============================== */
+.card {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.panel {
+  background-color: var(--color-panel-bg);
+  border: 1px solid var(--color-panel-border);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.panel:hover {
+  background-color: var(--color-panel-hover);
+}
