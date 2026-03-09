@@ -22,7 +22,7 @@ const content = {
     about: "Про нас",
 
     badge_version: "1.20.1 · Java Edition",
-    badge_started: "Запущен 15.08.2023",
+    badge_started: "Запущен 10.03.2026",
     
     hero_title_1: "Динамичность.",
     hero_title_2: "Сплочённость.",
