@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Moon, Sun, Download, LayoutGrid, Info, ArrowRight, Github, MessageCircle } from "lucide-react";
+import { Moon, Sun, Download, LayoutGrid, Info, BookOpen, ArrowRight, Github, MessageCircle } from "lucide-react";
 
 const content = {
   RU: {
@@ -21,6 +21,7 @@ const content = {
     nav_home: "Главная",
     nav_launcher: "Лаунчер",
     nav_server: "Сервер",
+    nav_wiki: "Вики",
     footer_disclaimer: "Не является официальным сервисом Minecraft. Не одобрено Mojang или Microsoft.",
     footer_since: "Работаем с 2020 года",
     footer_open_source: "Open Source",
@@ -40,6 +41,7 @@ const content = {
     nav_home: "Home",
     nav_launcher: "Launcher",
     nav_server: "Server",
+    nav_wiki: "Wiki",
     footer_disclaimer: "Not an official Minecraft service. Not approved by Mojang or Microsoft.",
     footer_since: "Since 2020",
     footer_open_source: "Open Source",
@@ -104,29 +106,35 @@ export default function Home() {
       })}
     </div>
 
-    {/* Правая часть: Панель (Единый размер элементов) */}
-    <div className="flex items-center justify-end gap-3 w-1/3">
-      <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)]">
-        
-        {/* Язык */}
-        <button 
-          onClick={() => setLang(lang === "RU" ? "EN" : "RU")} 
-          className="px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-xs font-black uppercase transition-colors"
-        >
-          {lang}
-        </button>
+    {/* Правая часть: Управление (Вики, Язык, Тема) */}
+          <div className="flex items-center justify-end w-1/3 gap-3">
+            <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)] shadow-sm">
+              
+              <Link 
+                href="/wiki" 
+                className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-sm font-bold uppercase transition-colors group"
+              >
+                <BookOpen size={14} className="text-[var(--color-text-gray)] group-hover:text-[var(--color-accent-blue)] transition-colors" />
+                <span className="hidden sm:block text-[var(--color-text-gray)] group-hover:text-[var(--color-text)] transition-colors">{t.nav_wiki}</span>
+              </Link>
 
-        <div className="w-px h-4 bg-[var(--color-border-sharp)] opacity-50" />
-
-        {/* Тема */}
-        <button 
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-          className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
-        >
-          {theme === "dark" ? <Sun size={14}/> : <Moon size={14}/>}
-        </button>
-      </div>
-    </div>
+              <div className="w-px h-4 bg-[var(--color-border-sharp)] mx-0.5" />
+              
+              <button 
+                onClick={() => setLang(lang === "RU" ? "EN" : "RU")} 
+                className="px-2 md:px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-sm font-bold uppercase text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
+              >
+                {lang}
+              </button>
+              
+              <button 
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
+                className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
+              >
+                {theme === "dark" ? <Sun size={14}/> : <Moon size={14}/>}
+              </button>
+            </div>
+          </div>
   </div>
 </nav>
 
@@ -218,8 +226,8 @@ export default function Home() {
             </div>
 
             <div className="flex flex-wrap gap-x-12 gap-y-6">
-               <FooterLink icon={<MessageCircle size={16}/>} label="Discord" href="#" />
-               <FooterLink icon={<Github size={16}/>} label="GitHub" href="#" />
+               <FooterLink icon={<MessageCircle size={16}/>} label="Discord" href="https://discord.gg/t7bjdm9uDC" />
+               <FooterLink icon={<Github size={16}/>} label="GitHub" href="https://github.com/Lemansen" />
             </div>
           </div>
 
@@ -242,7 +250,7 @@ export default function Home() {
 
 function FooterLink({ icon, label, href }: { icon: React.ReactNode, label: string, href: string }) {
   return (
-    <a href={href} className="flex items-center gap-2.5 text-xs font-black uppercase tracking-widest text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-all group">
+    <a href="https://github.com/Lemansen/SubReelWeb" className="flex items-center gap-2.5 text-xs font-black uppercase tracking-widest text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-all group">
       <span className="opacity-60 group-hover:opacity-100 transition-opacity">{icon}</span>
       {label}
     </a>

@@ -8,27 +8,29 @@ import {
   Moon, Sun, Download, Info, Zap, 
   ShieldCheck, Smartphone, Monitor, Lock,
   Server, Wrench, Settings2, Newspaper, 
-  DownloadCloud, Users, Palette, BookOpen, MessageSquare,
+  DownloadCloud, Users, Palette, BookOpen, Plus, Play, User,
+  MessageSquare, Search,
   ChevronLeft 
 } from "lucide-react";
 
 const content = {
   RU: {
     about: "Про нас",
-    hero_title: "SubReel Launcher",
+    hero_title: "SubReel",
     hero_subtitle: "Твой пропуск в мир комфортной игры. Стабильно, быстро и ничего лишнего.",
     download_btn: "Скачать для",
     coming_soon: "Скоро для Вашей ОС",
     only_win: "В данный момент доступно только для Windows",
     version_info: "Версия 0.1.2 • Тестирование",
-    
-    // Навигация
+    hero_title_accent: "Лаунчер",
+    download_unix: "Другие платформы",
+
     nav_home: "Главная",
     nav_launcher: "Лаунчер",
     nav_server: "Сервер",
     nav_back: "Назад",
     nav_wiki: "Вики",
-    // --- Текущие фичи ---
+    
     features_title: "Возможности лаунчера",
     feat_server: "Быстрый вход",
     feat_server_desc: "Залетай на наш сервер прямо с главного экрана лаунчера в один клик. Никакого ввода IP и лишних меню.",
@@ -39,7 +41,15 @@ const content = {
     feat_news: "Лента новостей",
     feat_news_desc: "Встроенный блок новостей не даст тебе пропустить вайпы, ивенты и важные обновления проекта.",
 
-    // --- В разработке ---
+    preview_search: "Поиск сборок...",
+    preview_our_server: "Наш сервер",
+    preview_server_desc: "Наши моды и настройки",
+    preview_create: "СОЗДАТЬ СБОРКУ",
+    preview_create_desc: "Свои моды и настройки",
+    preview_status: "Готов к запуску",
+    preview_play: "ИГРАТЬ",
+    preview_online: "ОНЛАЙН: 42",
+
     soon_title: "В разработке",
     badge_soon: "Скоро",
     soon_mods: "CurseForge & Modrinth",
@@ -49,22 +59,23 @@ const content = {
     soon_themes: "Кастомизация UI",
     soon_themes_desc: "Настраивай внешний вид самого лаунчера: темы, цвета и фоновые изображения.",
 
-    // --- Блок Discord ---
     cta_title: "Чего бы вы хотели увидеть у нас в лаунчере?",
     cta_desc: "Мы делаем продукт для игроков и прислушиваемся к комьюнити. Нашли баг или есть гениальная идея? Ждем вас в нашем Discord!",
     cta_btn: "Написать в Discord",
 
     footer_disclaimer: "Не является официальным сервисом Minecraft. Не одобрено Mojang или Microsoft.",
-    footer_since: "Существует с 2020 года",
+    footer_since: "Существует с 2026 года",
   },
   EN: {
     about: "About Us",
-    hero_title: "SubReel Launcher",
+    hero_title: "SubReel",
     hero_subtitle: "Your gateway to comfortable gameplay. Stable, fast, and nothing extra.",
     download_btn: "Download for",
     coming_soon: "Soon for your OS",
     only_win: "Currently available only for Windows",
     version_info: "Version 0.1.2 • Testing",
+    hero_title_accent: "Launcher",
+    download_unix: "Other platforms",
 
     nav_home: "Home",
     nav_launcher: "Launcher",
@@ -82,6 +93,15 @@ const content = {
     feat_news: "News Feed",
     feat_news_desc: "The built-in news block ensures you never miss wipes, events, and important project updates.",
 
+    preview_search: "Search builds...",
+    preview_our_server: "Our server",
+    preview_server_desc: "Our mods & settings",
+    preview_create: "CREATE BUILD",
+    preview_create_desc: "Your mods & settings",
+    preview_status: "Ready to launch",
+    preview_play: "PLAY",
+    preview_online: "ONLINE: 42",
+
     soon_title: "In Development",
     badge_soon: "Soon",
     soon_mods: "CurseForge & Modrinth",
@@ -96,7 +116,7 @@ const content = {
     cta_btn: "Join Discord",
 
     footer_disclaimer: "Not an official Minecraft service. Not approved by Mojang or Microsoft.",
-    footer_since: "Since 2020",
+    footer_since: "Since 2026",
   },
 };
 
@@ -105,6 +125,7 @@ export default function DownloadPage() {
   const [mounted, setMounted] = useState(false);
   const [lang, setLang] = useState<"RU" | "EN">("RU");
   const [os, setOs] = useState<"Windows" | "Other">("Windows");
+  const [discordOnline, setDiscordOnline] = useState<number | null>(null);
 
   const pathname = usePathname();
   const router = useRouter();
@@ -115,6 +136,18 @@ export default function DownloadPage() {
       const platform = window.navigator.platform.toLowerCase();
       if (!platform.includes("win")) setOs("Other");
     }
+    const discordServerId = "1143957199786364959"; 
+  
+      fetch(`https://discord.com/api/guilds/${discordServerId}/widget.json`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.presence_count !== undefined) {
+          setDiscordOnline(data.presence_count);
+        } else {
+          setDiscordOnline(0);
+        }
+      })
+      .catch(() => setDiscordOnline(0));
   }, []);
 
   if (!mounted) return null;
@@ -123,7 +156,7 @@ export default function DownloadPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] transition-colors">
       
-      {/* NAVBAR */}
+            {/* NAVBAR */}
       <nav className="border-b border-[var(--color-border-sharp)] sticky top-0 bg-[var(--color-bg)]/70 backdrop-blur-md z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
           
@@ -195,63 +228,127 @@ export default function DownloadPage() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-<section className="relative pt-24 pb-32 px-6 overflow-hidden">
-        {/* Декоративная сетка на фоне */}
-        <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:40px_40px] opacity-[0.05] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
-        
-        <div className="relative max-w-5xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-[10px] font-black uppercase tracking-[0.2em] mb-10 border border-[var(--color-accent-blue)]/20 animate-fade-in">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-accent-blue)] opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-accent-blue)]"></span>
-            </span>
-            {t.version_info}
-          </div>
+      <main className="max-w-7xl mx-auto px-6 w-full">
+        {/* HERO SECTION */}
+        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center py-16 lg:py-28">
+          <div className="relative z-10 text-center lg:text-left order-2 lg:order-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-[10px] font-black uppercase tracking-widest mb-8 border border-[var(--color-accent-blue)]/20 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-accent-blue)] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--color-accent-blue)]"></span>
+              </span>
+              {t.version_info}
+            </div>
 
-          <h1 className="text-6xl md:text-9xl font-[1000] tracking-[-0.04em] mb-8 uppercase italic leading-[0.8] text-balance">
-            SubReel <span className="text-[var(--color-accent-blue)]">Launcher</span>
-          </h1>
-          
-          <p className="text-xl text-[var(--color-text-gray)] max-w-2xl mx-auto mb-16 font-medium leading-relaxed">
-            {t.hero_subtitle}
-          </p>
-
-          <div className="flex flex-col items-center gap-6">
-            {os === "Windows" ? (
-              <button className="group relative flex items-center gap-8 bg-[var(--color-accent-blue)] text-white px-12 py-6 rounded-[2rem] font-black text-2xl transition-all hover:scale-105 active:scale-95 shadow-[0_20px_50px_-10px_rgba(59,130,246,0.4)]">
-                <div className="text-left">
-                  <span className="block text-[10px] uppercase opacity-70 tracking-widest mb-1">{t.download_btn}</span>
-                  <span className="block leading-none tracking-tighter">WINDOWS</span>
+            <h1 className="text-5xl md:text-7xl lg:text-8xl font-[1000] italic uppercase tracking-tighter leading-[0.9] mb-8">
+              {t.hero_title} <br/>
+              <span className="text-[var(--color-accent-blue)]">{t.hero_title_accent}</span>
+            </h1>
+            <p className="text-lg md:text-xl text-[var(--color-text-gray)] font-medium italic mb-10 max-w-lg leading-relaxed mx-auto lg:mx-0">
+              {t.hero_subtitle}
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              {os === "Windows" ? (
+                <a 
+                  href="https://github.com/Lemansen/SubReel/releases/download/0.1.2/SubReel.exe"
+                  className="group relative flex-1 flex items-center gap-6 bg-[var(--color-accent-blue)] text-white px-8 py-5 rounded-[2rem] font-black transition-all hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_-10px_rgba(59,130,246,0.4)] cursor-pointer"
+                >
+                  <div className="text-left">
+                    <span className="block text-[10px] uppercase opacity-70 tracking-widest mb-1">{t.download_btn}</span>
+                    <span className="block text-2xl leading-none tracking-tighter">WINDOWS</span>
+                  </div>
+                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform ml-auto">
+                    <Download size={24} strokeWidth={3} />
+                  </div>
+                </a>
+              ) : (
+                <div className="flex-1 bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] px-8 py-5 rounded-[2rem] font-black uppercase italic flex items-center justify-center gap-3 opacity-50">
+                  <Lock size={20} /> {t.only_win}
                 </div>
-                <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center group-hover:rotate-12 transition-transform">
-                  <Download size={32} strokeWidth={3} />
-                </div>
+              )}
+              <button className="px-8 py-5 border border-[var(--color-border-sharp)] rounded-[2rem] font-black uppercase italic flex items-center justify-center gap-3 hover:bg-[var(--color-panel-hover)] transition-all text-[var(--color-text-gray)] hover:text-[var(--color-text)]">
+                <Settings2 size={20} /> {t.download_unix}
               </button>
-            ) : (
-              <div className="bg-[var(--color-panel-bg)] p-8 rounded-[2.5rem] border border-[var(--color-border-sharp)] inline-flex flex-col items-center gap-4">
-                 <button disabled className="flex items-center gap-6 opacity-40 px-10 py-5 rounded-2xl font-black text-xl cursor-not-allowed border border-white/5">
-                  <span className="italic uppercase">macOS / Linux</span>
-                  <Lock size={24} />
-                </button>
-                <p className="text-[10px] uppercase font-bold text-red-500 tracking-widest">{t.only_win}</p>
-              </div>
-            )}
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* 1. БЛОК: АКТУАЛЬНЫЕ ФИЧИ */}
-      <section className="px-6 py-20 bg-white/[0.01]">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-12 text-center md:text-left">
-            <h2 className="text-4xl font-black uppercase italic tracking-tighter flex items-center justify-center md:justify-start gap-3">
-              <div className="w-2 h-10 bg-[var(--color-accent-blue)] rounded-full hidden md:block"/>
+          {/* LAUNCHER UI PREVIEW */}
+          <div className="relative group order-1 lg:order-2">
+            <div className="absolute inset-0 bg-[var(--color-accent-blue)]/20 blur-[100px] rounded-full group-hover:bg-[var(--color-accent-blue)]/30 transition-all duration-1000" />
+            
+            <div className="relative aspect-[16/10] bg-[#0c0d11] rounded-[1.5rem] border border-white/5 overflow-hidden shadow-2xl flex font-sans transform lg:rotate-2 group-hover:rotate-0 transition-transform duration-700">
+              {/* Sidebar */}
+              <div className="w-[22%] border-r border-white/5 bg-[#0a0b0e] p-4 flex flex-col items-center">
+                <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-blue)]/20 border border-[var(--color-accent-blue)] flex items-center justify-center mb-6">
+                  <User size={20} className="text-[var(--color-accent-blue)]" />
+                </div>
+                <div className="w-full space-y-3">
+                  <div className="h-7 w-full bg-[var(--color-accent-blue)]/10 border-l-2 border-[var(--color-accent-blue)] flex items-center px-4">
+                    <div className="h-1 w-12 bg-[var(--color-accent-blue)] rounded-full" />
+                  </div>
+                  <div className="h-7 w-full flex items-center px-4 opacity-20"><div className="h-1 w-10 bg-white rounded-full" /></div>
+                  <div className="h-7 w-full flex items-center px-4 opacity-20"><div className="h-1 w-8 bg-white rounded-full" /></div>
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="flex-1 p-5 md:p-8 flex flex-col relative">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30 italic">SubReel Studio</div>
+                  <div className="flex gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/10" />
+                  </div>
+                </div>
+
+                <div className="w-full h-9 bg-white/5 rounded-xl border border-white/5 flex items-center px-4 gap-3 mb-8">
+                  <Search size={14} className="opacity-20" />
+                  <div className="text-[9px] opacity-20 uppercase font-bold tracking-widest">{t.preview_search}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="aspect-video bg-white/5 border border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center group-hover:border-[var(--color-accent-blue)]/40 transition-colors">
+                    <div className="text-[10px] font-black uppercase italic mb-1 tracking-tighter">{t.preview_our_server}</div>
+                    <div className="text-[8px] opacity-40 uppercase font-bold">{t.preview_server_desc}</div>
+                  </div>
+                  <div className="aspect-video bg-white/5 border border-dashed border-white/10 rounded-2xl p-4 flex flex-col items-center justify-center text-center opacity-40">
+                    <Plus size={16} className="text-[var(--color-accent-blue)] mb-1" />
+                    <div className="text-[10px] font-black uppercase italic tracking-tighter">{t.preview_create}</div>
+                  </div>
+                </div>
+
+                <div className="mt-auto flex justify-between items-end">
+                  <div className="space-y-1">
+                    <div className="text-[10px] font-black italic opacity-80">{t.preview_status}</div>
+                    <div className="flex items-center gap-2">
+                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                       <div className="text-[8px] font-black uppercase opacity-60 tracking-widest">{t.preview_online}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="w-28 h-10 bg-[var(--color-accent-blue)] rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform">
+                    <div className="flex items-center gap-2">
+                      <Play size={12} fill="white" className="text-white" />
+                      <span className="text-white font-black italic uppercase text-[11px] tracking-tighter">{t.preview_play}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 1. БЛОК: АКТУАЛЬНЫЕ ФИЧИ */}
+        <section className="py-24 border-t border-[var(--color-border-sharp)]">
+          <div className="mb-16 text-center lg:text-left">
+            <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter flex items-center justify-center lg:justify-start gap-4">
+              <div className="w-2 h-12 bg-[var(--color-accent-blue)] rounded-full hidden lg:block"/>
               {t.features_title}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <FeatureCard 
               icon={<Server size={32} />} 
               title={t.feat_server} 
@@ -273,20 +370,18 @@ export default function DownloadPage() {
               desc={t.feat_news_desc} 
             />
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 2. БЛОК: В РАЗРАБОТКЕ */}
-      <section className="px-6 pb-20 bg-white/[0.01]">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-12 text-center md:text-left">
-            <h2 className="text-3xl text-[var(--color-text-gray)] font-black uppercase italic tracking-tighter flex items-center justify-center md:justify-start gap-3">
-              <div className="w-2 h-8 bg-[var(--color-text-gray)]/30 rounded-full hidden md:block"/>
+        {/* 2. БЛОК: В РАЗРАБОТКЕ */}
+        <section className="pb-24">
+          <div className="mb-16 text-center lg:text-left">
+            <h2 className="text-3xl md:text-4xl text-[var(--color-text-gray)] font-black uppercase italic tracking-tighter flex items-center justify-center lg:justify-start gap-4">
+              <div className="w-2 h-10 bg-[var(--color-text-gray)]/30 rounded-full hidden lg:block"/>
               {t.soon_title}
             </h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-70">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-80">
             <FeatureCard 
               icon={<DownloadCloud size={28} />} 
               title={t.soon_mods} 
@@ -306,58 +401,90 @@ export default function DownloadPage() {
               badge={t.badge_soon}
             />
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
 
-      {/* 3. БЛОК: DISCORD */}
-      <section className="px-6 py-20 border-t border-[var(--color-border-sharp)] bg-[var(--color-accent-blue)]/5 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[300px] bg-[var(--color-accent-blue)]/10 blur-[100px] rounded-full pointer-events-none" />
-        
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="w-20 h-20 bg-[var(--color-accent-blue)]/20 text-[var(--color-accent-blue)] rounded-3xl flex items-center justify-center mx-auto mb-8 rotate-3">
-            <MessageSquare size={40} />
+            {/* 3. БЛОК: ОБРАТНАЯ СВЯЗЬ (DISCORD) */}
+      <section className="px-6 py-24 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="relative rounded-[3rem] bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] overflow-hidden p-8 md:p-20 shadow-2xl">
+            
+            {/* Декоративное свечение на фоне */}
+            <div className="absolute -top-24 -right-24 w-96 h-96 bg-[var(--color-accent-blue)]/20 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-purple-600/10 blur-[120px] rounded-full pointer-events-none" />
+
+            <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
+              <div className="max-w-2xl text-center lg:text-left">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#5865F2]/10 text-[#5865F2] text-xs font-black uppercase tracking-[0.2em] mb-8 border border-[#5865F2]/20">
+                  <MessageSquare size={16} fill="currentColor" className="opacity-80" />
+                  Community Feedback
+                </div>
+                
+                <h2 className="text-4xl md:text-6xl font-[1000] uppercase italic tracking-tighter mb-8 leading-[0.95] text-balance">
+                  {t.cta_title.split('?')[0]}<span className="text-[var(--color-accent-blue)]">?</span>
+                </h2>
+                
+                <p className="text-lg md:text-xl text-[var(--color-text-gray)] font-medium leading-relaxed mb-0">
+                  {t.cta_desc}
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center gap-6">
+                <a 
+                  href="https://discord.gg/t7bjdm9uDC" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group relative inline-flex items-center gap-6 bg-[#5865F2] text-white px-10 py-6 rounded-[2rem] font-black text-2xl transition-all hover:scale-105 hover:shadow-[0_20px_50px_-10px_rgba(88,101,242,0.5)] active:scale-95 overflow-hidden"
+                >
+                  {/* Эффект блика на кнопке при наведении */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  
+                  <div className="bg-white/20 p-2 rounded-xl">
+                    <svg width="28" height="28" viewBox="0 0 127.14 96.36" fill="currentColor">
+                      <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77.7,77.7,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
+                    </svg>
+                  </div>
+                  <span className="italic uppercase tracking-tighter">{t.cta_btn}</span>
+                </a>
+                
+                <div className="flex -space-x-3">
+  {[1, 2, 3, 4].map((i) => (
+    <div key={i} className="w-10 h-10 rounded-full border-4 border-[var(--color-panel-bg)] bg-[var(--color-bg)] flex items-center justify-center overflow-hidden">
+       <User size={20} className="text-[var(--color-text-gray)]" />
+    </div>
+  ))}
+  <div className="min-w-[40px] px-2 h-10 rounded-full border-4 border-[var(--color-panel-bg)] bg-[var(--color-accent-blue)] flex items-center justify-center text-[10px] font-black text-white">
+  {typeof discordOnline === 'number' ? `+${discordOnline}` : "..."}
+</div>
+</div>
+              </div>
+            </div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter mb-6">
-            {t.cta_title}
-          </h2>
-          <p className="text-xl text-[var(--color-text-gray)] mb-10 max-w-2xl mx-auto font-medium leading-relaxed">
-            {t.cta_desc}
-          </p>
-          
-          <a 
-            href="https://discord.gg/your-invite-link" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 bg-[#5865F2] hover:bg-[#4752C4] text-white px-8 py-4 rounded-2xl font-black text-lg transition-transform hover:scale-105 active:scale-95 shadow-xl shadow-[#5865F2]/20"
-          >
-            <svg width="24" height="24" viewBox="0 0 127.14 96.36" fill="currentColor">
-              <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77.7,77.7,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.36,46,96.26,53,91.08,65.69,84.69,65.69Z"/>
-            </svg>
-            {t.cta_btn}
-          </a>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-10 mt-auto bg-[var(--color-bg)]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-8">
-          <div className="flex flex-col md:flex-row justify-between gap-10">
-            <div className="flex flex-col gap-4 max-w-xl">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-[var(--color-accent-blue)] rounded-lg flex items-center justify-center text-white font-bold">S</div>
-                <span className="font-bold text-xl tracking-tight uppercase italic">Subreel Studio</span>
+      <footer className="py-16 bg-[var(--color-bg)]">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-12 text-center md:text-left">
+            <div className="flex flex-col gap-5 max-w-xl">
+              <div className="flex items-center justify-center md:justify-start gap-3">
+                <div className="w-10 h-10 bg-[var(--color-accent-blue)] rounded-xl flex items-center justify-center text-white font-black text-xl italic shadow-md">S</div>
+                <span className="font-black text-2xl tracking-tighter uppercase italic">Subreel Studio</span>
               </div>
-              <p className="text-[11px] uppercase opacity-60 font-semibold tracking-wider text-[var(--color-text-gray)]">
+              <p className="text-[10px] md:text-[11px] uppercase opacity-50 font-bold tracking-widest text-[var(--color-text-gray)] leading-loose">
                 {t.footer_disclaimer}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-sm font-semibold uppercase tracking-tighter">
-              <a href="https://discord.gg/your-invite-link" className="text-[var(--color-text-gray)] hover:text-[#5865F2] transition-colors">Discord</a>
-              <a href="#" className="text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors">GitHub</a>
+            <div className="flex flex-wrap justify-center gap-x-10 gap-y-4 text-xs font-black uppercase tracking-widest">
+              <a href="https://discord.gg/t7bjdm9uDC" className="text-[var(--color-text-gray)] hover:text-[#5865F2] transition-colors">Discord</a>
+              <a href="https://github.com/Lemansen/SubReel" className="text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors">GitHub</a>
+              <Link href="/wiki" className="text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors">Wiki</Link>
             </div>
           </div>
-          <hr className="border-[var(--color-border-sharp)] opacity-50"/>
-          <p className="text-[10px] uppercase tracking-[0.3em] font-black text-[var(--color-text-gray)] text-center">{t.footer_since}</p>
+          <div className="pt-10 border-t border-[var(--color-border-sharp)] opacity-50 text-center">
+            <p className="text-[9px] uppercase tracking-[0.4em] font-black text-[var(--color-text-gray)]">{t.footer_since}</p>
+          </div>
         </div>
       </footer>
     </div>
@@ -366,18 +493,18 @@ export default function DownloadPage() {
 
 function FeatureCard({ icon, title, desc, badge }: { icon: React.ReactNode, title: string, desc: string, badge?: string }) {
   return (
-    <div className="bg-[var(--color-card-bg)] border border-[var(--color-border-sharp)] p-10 rounded-[2.5rem] hover:border-[var(--color-accent-blue)] hover:bg-[var(--color-panel-hover)] transition-all group relative overflow-hidden flex flex-col h-full">
+    <div className="bg-[var(--color-card-bg)] border border-[var(--color-border-sharp)] p-8 md:p-10 rounded-[2.5rem] hover:border-[var(--color-accent-blue)]/50 hover:bg-[var(--color-panel-hover)] transition-all group relative overflow-hidden flex flex-col h-full shadow-sm">
       {badge && (
-        <div className="absolute top-8 right-8 bg-[var(--color-text-gray)]/20 text-[var(--color-text)] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-[var(--color-text-gray)]/30 backdrop-blur-sm">
+        <div className="absolute top-8 right-8 bg-[var(--color-text-gray)]/10 text-[var(--color-text-gray)] px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border border-[var(--color-border-sharp)] backdrop-blur-sm group-hover:text-[var(--color-accent-blue)] group-hover:bg-[var(--color-accent-blue)]/10 transition-colors">
           {badge}
         </div>
       )}
       
-      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-8 transition-transform group-hover:scale-110 group-hover:-rotate-3 ${badge ? 'bg-[var(--color-text-gray)]/10 text-[var(--color-text-gray)]' : 'bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)]'}`}>
+      <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-8 transition-all group-hover:scale-110 group-hover:-rotate-3 ${badge ? 'bg-[var(--color-text-gray)]/10 text-[var(--color-text-gray)]' : 'bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)]'}`}>
         {icon}
       </div>
-      <h3 className="text-2xl font-black uppercase italic mb-4 tracking-tighter">{title}</h3>
-      <p className="text-[var(--color-text-gray)] text-base font-medium leading-relaxed mt-auto">{desc}</p>
+      <h3 className="text-xl md:text-2xl font-black uppercase italic mb-4 tracking-tighter group-hover:text-[var(--color-accent-blue)] transition-colors">{title}</h3>
+      <p className="text-[var(--color-text-gray)] text-sm md:text-base font-medium leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">{desc}</p>
     </div>
   );
 }
