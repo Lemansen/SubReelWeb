@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
 
 /* ===============================
    Лаунчерные цвета (светлая тема)
@@ -49,6 +51,7 @@
 body {
   background-color: var(--color-app-bg);
   color: var(--color-app-fg);
+  font-family: "Segoe UI", "Trebuchet MS", "Helvetica Neue", sans-serif;
   transition: background-color 0.3s, color 0.3s;
 }
 

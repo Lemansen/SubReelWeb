@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
-  Moon, Sun, Download, Info, Zap, 
-  ShieldCheck, Smartphone, Monitor, Lock,
+  Download, Lock,
   Server, Wrench, Settings2, Newspaper, 
   DownloadCloud, Users, Palette, BookOpen, Plus, Play, User,
   MessageSquare, Search,
-  ChevronLeft 
+  ChevronLeft, Menu, X
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const content = {
   RU: {
@@ -121,21 +120,14 @@ const content = {
 };
 
 export default function DownloadPage() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [lang, setLang] = useState<"RU" | "EN">("RU");
-  const [os, setOs] = useState<"Windows" | "Other">("Windows");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [discordOnline, setDiscordOnline] = useState<number | null>(null);
 
   const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
-    setMounted(true);
-    if (typeof window !== "undefined") {
-      const platform = window.navigator.platform.toLowerCase();
-      if (!platform.includes("win")) setOs("Other");
-    }
     const discordServerId = "1143957199786364959"; 
   
       fetch(`https://discord.com/api/guilds/${discordServerId}/widget.json`)
@@ -150,18 +142,21 @@ export default function DownloadPage() {
       .catch(() => setDiscordOnline(0));
   }, []);
 
-  if (!mounted) return null;
   const t = content[lang];
+  const os: "Windows" | "Other" =
+    typeof navigator !== "undefined" && !navigator.platform.toLowerCase().includes("win")
+      ? "Other"
+      : "Windows";
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] transition-colors">
       
             {/* NAVBAR */}
       <nav className="border-b border-[var(--color-border-sharp)] sticky top-0 bg-[var(--color-bg)]/70 backdrop-blur-md z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 min-h-16 py-3 md:py-0 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 relative">
           
           {/* Левая часть: Кнопка назад и Лого */}
-          <div className="flex items-center gap-6 w-1/3">
+          <div className="flex items-center gap-3 md:gap-6 w-auto md:w-1/3 min-w-0">
             <button 
               onClick={() => router.back()} 
               className="flex items-center gap-1 text-sm font-bold uppercase tracking-wider text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors"
@@ -174,7 +169,7 @@ export default function DownloadPage() {
           </div>
 
           {/* Центр: Ссылки */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-8">
+          <div className="hidden md:flex order-3 md:order-none w-full md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2 items-center justify-center gap-3 md:gap-8 overflow-x-auto">
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
@@ -197,7 +192,7 @@ export default function DownloadPage() {
           </div>
 
           {/* Правая часть: Управление (Вики, Язык, Тема) */}
-          <div className="flex items-center justify-end w-1/3 gap-3">
+          <div className="hidden md:flex items-center justify-end w-auto md:w-1/3 gap-3 ml-auto">
             <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)] shadow-sm">
               
               <Link 
@@ -217,20 +212,54 @@ export default function DownloadPage() {
                 {lang}
               </button>
               
-              <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-                className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
-              >
-                {theme === "dark" ? <Sun size={14}/> : <Moon size={14}/>}
-              </button>
+              <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
           </div>
+
+          <div className="md:hidden ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((value) => !value)}
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] text-[var(--color-text)]"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+
+          {mobileMenuOpen && (
+            <div className="md:hidden order-4 w-full rounded-[1.5rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-3 shadow-lg">
+              <div className="grid gap-2">
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_home}
+                </Link>
+                <Link href="/launcher" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_launcher}
+                </Link>
+                <Link href="/server" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_server}
+                </Link>
+                <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_wiki}
+                </Link>
+              </div>
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
+                <button
+                  onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
+                  className="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]"
+                >
+                  {lang}
+                </button>
+                <ThemeToggle className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-6 w-full">
+      <main className="max-w-7xl mx-auto px-4 md:px-6 w-full">
         {/* HERO SECTION */}
-        <section className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center py-16 lg:py-28">
+        <section className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center py-12 md:py-16 lg:py-28">
           <div className="relative z-10 text-center lg:text-left order-2 lg:order-1">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-[10px] font-black uppercase tracking-widest mb-8 border border-[var(--color-accent-blue)]/20 shadow-sm">
               <span className="relative flex h-2 w-2">
@@ -240,7 +269,7 @@ export default function DownloadPage() {
               {t.version_info}
             </div>
 
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-[1000] italic uppercase tracking-tighter leading-[0.9] mb-8">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-[1000] italic uppercase tracking-tighter leading-[0.95] md:leading-[0.9] mb-6 md:mb-8">
               {t.hero_title} <br/>
               <span className="text-[var(--color-accent-blue)]">{t.hero_title_accent}</span>
             </h1>
@@ -252,7 +281,7 @@ export default function DownloadPage() {
               {os === "Windows" ? (
                 <a 
                   href="https://github.com/Lemansen/SubReel/releases/download/0.1.2/SubReel.exe"
-                  className="group relative flex-1 flex items-center gap-6 bg-[var(--color-accent-blue)] text-white px-8 py-5 rounded-[2rem] font-black transition-all hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_-10px_rgba(59,130,246,0.4)] cursor-pointer"
+                  className="group relative flex-1 flex items-center gap-4 md:gap-6 bg-[var(--color-accent-blue)] text-white px-6 md:px-8 py-4 md:py-5 rounded-[1.75rem] md:rounded-[2rem] font-black transition-all hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_-10px_rgba(59,130,246,0.4)] cursor-pointer"
                 >
                   <div className="text-left">
                     <span className="block text-[10px] uppercase opacity-70 tracking-widest mb-1">{t.download_btn}</span>
@@ -263,13 +292,18 @@ export default function DownloadPage() {
                   </div>
                 </a>
               ) : (
-                <div className="flex-1 bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] px-8 py-5 rounded-[2rem] font-black uppercase italic flex items-center justify-center gap-3 opacity-50">
+                <div className="flex-1 bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 md:py-5 rounded-[1.75rem] md:rounded-[2rem] font-black uppercase italic flex items-center justify-center gap-3 opacity-50">
                   <Lock size={20} /> {t.only_win}
                 </div>
               )}
-              <button className="px-8 py-5 border border-[var(--color-border-sharp)] rounded-[2rem] font-black uppercase italic flex items-center justify-center gap-3 hover:bg-[var(--color-panel-hover)] transition-all text-[var(--color-text-gray)] hover:text-[var(--color-text)]">
+              <a
+                href="https://github.com/Lemansen/SubReel/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-6 md:px-8 py-4 md:py-5 border border-[var(--color-border-sharp)] rounded-[1.75rem] md:rounded-[2rem] font-black uppercase italic flex items-center justify-center gap-3 hover:bg-[var(--color-panel-hover)] transition-all text-[var(--color-text-gray)] hover:text-[var(--color-text)]"
+              >
                 <Settings2 size={20} /> {t.download_unix}
-              </button>
+              </a>
             </div>
           </div>
 
@@ -277,7 +311,7 @@ export default function DownloadPage() {
           <div className="relative group order-1 lg:order-2">
             <div className="absolute inset-0 bg-[var(--color-accent-blue)]/20 blur-[100px] rounded-full group-hover:bg-[var(--color-accent-blue)]/30 transition-all duration-1000" />
             
-            <div className="relative aspect-[16/10] bg-[#0c0d11] rounded-[1.5rem] border border-white/5 overflow-hidden shadow-2xl flex font-sans transform lg:rotate-2 group-hover:rotate-0 transition-transform duration-700">
+            <div className="relative aspect-[16/10] bg-[#0c0d11] rounded-[1.25rem] md:rounded-[1.5rem] border border-white/5 overflow-hidden shadow-2xl flex font-sans transform lg:rotate-2 group-hover:rotate-0 transition-transform duration-700">
               {/* Sidebar */}
               <div className="w-[22%] border-r border-white/5 bg-[#0a0b0e] p-4 flex flex-col items-center">
                 <div className="w-10 h-10 rounded-xl bg-[var(--color-accent-blue)]/20 border border-[var(--color-accent-blue)] flex items-center justify-center mb-6">
@@ -405,7 +439,7 @@ export default function DownloadPage() {
       </main>
 
             {/* 3. БЛОК: ОБРАТНАЯ СВЯЗЬ (DISCORD) */}
-      <section className="px-6 py-24 relative overflow-hidden">
+      <section className="px-4 md:px-6 py-16 md:py-24 relative overflow-hidden">
         <div className="max-w-7xl mx-auto">
           <div className="relative rounded-[3rem] bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] overflow-hidden p-8 md:p-20 shadow-2xl">
             
@@ -464,8 +498,8 @@ export default function DownloadPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-16 bg-[var(--color-bg)]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col gap-12">
+      <footer className="py-12 md:py-16 bg-[var(--color-bg)]">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col gap-12">
           <div className="flex flex-col md:flex-row justify-between items-center md:items-start gap-12 text-center md:text-left">
             <div className="flex flex-col gap-5 max-w-xl">
               <div className="flex items-center justify-center md:justify-start gap-3">

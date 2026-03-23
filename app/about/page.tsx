@@ -1,24 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { 
-  Moon, Sun, ChevronLeft, Github, 
-  Code2, Paintbrush, Zap, Heart, User
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, Github, Heart, User } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 // ... (начало файла без изменений)
 
 export default function AboutPage() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [lang, setLang] = useState<"RU" | "EN">("RU");
   const router = useRouter();
-
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
 
   // Функция для получения аватарки из GitHub
   // Если ника не указано, возвращаем null для отображения стандартной иконки User
@@ -93,9 +86,7 @@ export default function AboutPage() {
             <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)]">
               <button onClick={() => setLang(lang === "RU" ? "EN" : "RU")} className="px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-xs font-black uppercase transition-colors">{lang}</button>
               <div className="w-px h-4 bg-[var(--color-border-sharp)] opacity-50" />
-              <button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] transition-colors">
-                {theme === "dark" ? <Sun size={14}/> : <Moon size={14}/>}
-              </button>
+              <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] transition-colors" />
             </div>
           </div>
         </div>
@@ -141,7 +132,13 @@ export default function AboutPage() {
                       <div className="w-20 h-20 rounded-full bg-[var(--color-card-bg)] p-1.5">
                         <div className="w-full h-full rounded-full bg-[var(--color-bg)] border-2 border-[var(--color-border-sharp)] overflow-hidden flex items-center justify-center group-hover:border-[var(--color-accent-blue)] transition-colors">
                           {avatarUrl ? (
-                            <img src={avatarUrl} alt={member.name} className="w-full h-full object-cover" />
+                            <Image
+                              src={avatarUrl}
+                              alt={member.name}
+                              width={80}
+                              height={80}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
                             <User size={32} className="opacity-20" />
                           )}
@@ -166,7 +163,12 @@ export default function AboutPage() {
                     </div>
 
                     <div className="mt-4 flex justify-end">
-                       <a href={member.github} className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors">
+                       <a
+                         href={member.github}
+                         target={member.github === "#" ? undefined : "_blank"}
+                         rel={member.github === "#" ? undefined : "noopener noreferrer"}
+                         className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors"
+                       >
                          <Github size={18} />
                        </a>
                     </div>

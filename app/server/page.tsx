@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useTheme } from "next-themes";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
-  Moon, Sun, Info, Server, Users, 
-  Cpu, HardDrive, Network, Copy, 
+  Users, 
+  Network, Copy, 
   CheckCircle2, ExternalLink, ShieldCheck, 
-  Activity, Zap, ChevronLeft, Map as MapIcon, 
-  BookOpen, Lock, MessageSquare, Smile, HelpCircle, ArrowRight
+  Zap, ChevronLeft, Map as MapIcon, 
+  BookOpen, MessageSquare, Smile, HelpCircle, ArrowRight, Menu, X
 } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const content = {
   RU: {
@@ -142,16 +142,13 @@ const content = {
 };
 
 export default function ServerPage() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
   const [lang, setLang] = useState<"RU" | "EN">("RU");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
   const serverIP = "play.subreel.ru";
-
-  useEffect(() => setMounted(true), []);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(serverIP);
@@ -159,7 +156,6 @@ export default function ServerPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!mounted) return null;
   const t = content[lang];
 
   return (
@@ -167,10 +163,10 @@ export default function ServerPage() {
       
       {/* NAVBAR */}
       <nav className="border-b border-[var(--color-border-sharp)] sticky top-0 bg-[var(--color-bg)]/70 backdrop-blur-md z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between relative">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 min-h-16 py-3 md:py-0 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 relative">
           
           {/* Левая часть: Кнопка назад и Лого */}
-          <div className="flex items-center gap-6 w-1/3">
+          <div className="flex items-center gap-3 md:gap-6 w-auto md:w-1/3 min-w-0">
             <button 
               onClick={() => router.back()} 
               className="flex items-center gap-1 text-sm font-bold uppercase tracking-wider text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors"
@@ -183,7 +179,7 @@ export default function ServerPage() {
           </div>
 
           {/* Центр: Ссылки */}
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-4 md:gap-8">
+          <div className="hidden md:flex order-3 md:order-none w-full md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2 items-center justify-center gap-3 md:gap-8 overflow-x-auto">
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
@@ -206,7 +202,7 @@ export default function ServerPage() {
           </div>
 
           {/* Правая часть: Управление (Вики, Язык, Тема) */}
-          <div className="flex items-center justify-end w-1/3 gap-3">
+          <div className="hidden md:flex items-center justify-end w-auto md:w-1/3 gap-3 ml-auto">
             <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)] shadow-sm">
               
               <Link 
@@ -226,19 +222,53 @@ export default function ServerPage() {
                 {lang}
               </button>
               
-              <button 
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
-                className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
-              >
-                {theme === "dark" ? <Sun size={14}/> : <Moon size={14}/>}
-              </button>
+              <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
           </div>
+
+          <div className="md:hidden ml-auto flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen((value) => !value)}
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] text-[var(--color-text)]"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+            </button>
+          </div>
+
+          {mobileMenuOpen && (
+            <div className="md:hidden order-4 w-full rounded-[1.5rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-3 shadow-lg">
+              <div className="grid gap-2">
+                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_home}
+                </Link>
+                <Link href="/launcher" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_launcher}
+                </Link>
+                <Link href="/server" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_server}
+                </Link>
+                <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
+                  {t.nav_wiki}
+                </Link>
+              </div>
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
+                <button
+                  onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
+                  className="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]"
+                >
+                  {lang}
+                </button>
+                <ThemeToggle className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
+              </div>
+            </div>
+          )}
         </div>
       </nav>
 
       {/* HERO SECTION */}
-      <section className="relative pt-20 pb-20 px-6 overflow-hidden">
+      <section className="relative pt-14 md:pt-20 pb-14 md:pb-20 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:40px_40px] opacity-[0.05] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
         
         <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
@@ -253,7 +283,7 @@ export default function ServerPage() {
               </div>
             </div>
             
-            <h1 className="text-5xl md:text-6xl font-[1000] tracking-[-0.04em] mb-6 uppercase italic leading-[0.9] text-balance">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-[1000] tracking-[-0.04em] mb-6 uppercase italic leading-[0.95] md:leading-[0.9] text-balance">
               <div className="text-[var(--color-text)]">{t.hero_title_1}</div>
               <div className="text-[var(--color-text)]">{t.hero_title_2}</div>
               <div className="text-[var(--color-accent-blue)]">{t.hero_title_3}</div>
@@ -264,13 +294,18 @@ export default function ServerPage() {
             </p>
             
             <div className="flex flex-wrap justify-center lg:justify-start gap-4">
-              <button className="flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 active:scale-95 shadow-[0_10px_30px_-10px_rgba(59,130,246,0.5)]">
+              <a
+                href="https://discord.gg/t7bjdm9uDC"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 active:scale-95 shadow-[0_10px_30px_-10px_rgba(59,130,246,0.5)]"
+              >
                 {t.join_btn} <ExternalLink size={20} strokeWidth={3} />
-              </button>
+              </a>
               
               <button 
                 onClick={copyToClipboard} 
-                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
+                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
               >
                 {copied ? <CheckCircle2 size={20} className="text-emerald-500" strokeWidth={3} /> : <Copy size={20} strokeWidth={3} />}
                 {copied ? t.copied : t.copy_ip}
@@ -288,7 +323,7 @@ export default function ServerPage() {
       </section>
 
       {/* WIKI SECTION */}
-      <section className="px-6 py-20 relative">
+      <section className="px-4 md:px-6 py-16 md:py-20 relative">
         <div className="max-w-7xl mx-auto">
           <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] rounded-[2.5rem] p-8 md:p-12">
             <div className="text-center mb-10">
@@ -319,7 +354,7 @@ export default function ServerPage() {
       </section>
 
       {/* DYNAMIC MAP BANNER */}
-      <section className="px-6 py-10 relative">
+      <section className="px-4 md:px-6 py-8 md:py-10 relative">
         <div className="max-w-7xl mx-auto">
           <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[var(--color-panel-bg)] to-[var(--color-accent-blue)]/10 border border-[var(--color-border-sharp)] flex flex-col md:flex-row items-center justify-between p-8 md:p-16 gap-8">
             <div className="relative z-10 max-w-xl text-center md:text-left">
@@ -332,7 +367,7 @@ export default function ServerPage() {
               <p className="text-[var(--color-text-gray)] font-medium text-lg mb-8 leading-relaxed">
                 {t.map_desc}
               </p>
-              <Link href="/map" className="inline-flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 hover:scale-105 active:scale-95 shadow-lg">
+              <Link href="/wiki/map" className="inline-flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 hover:scale-105 active:scale-95 shadow-lg">
                 <MapIcon size={20} strokeWidth={3} /> {t.map_btn}
               </Link>
             </div>
@@ -344,7 +379,7 @@ export default function ServerPage() {
       </section>
 
       {/* FEATURES / MODS */}
-      <section className="px-6 py-10 relative">
+      <section className="px-4 md:px-6 py-8 md:py-10 relative">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
           <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-10 md:p-12 rounded-[2.5rem] flex flex-col justify-between">
             <div>
@@ -369,7 +404,7 @@ export default function ServerPage() {
       </section>
 
       {/* FAQ SECTION */}
-      <section className="px-6 py-20 bg-white/[0.02] border-y border-[var(--color-border-sharp)]">
+      <section className="px-4 md:px-6 py-16 md:py-20 bg-white/[0.02] border-y border-[var(--color-border-sharp)]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-12 text-center">
             {t.faq_title}
@@ -389,7 +424,7 @@ export default function ServerPage() {
       </section>
 
       {/* FREE ACCESS BANNER */}
-      <section className="px-6 py-24 relative overflow-hidden">
+      <section className="px-4 md:px-6 py-18 md:py-24 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-6">
             {t.access_title}
@@ -415,7 +450,7 @@ export default function ServerPage() {
 
       {/* FOOTER */}
       <footer className="py-10 mt-auto bg-[var(--color-bg)] border-t border-[var(--color-border-sharp)]">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-8 text-center sm:text-left">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col sm:flex-row justify-between items-center gap-8 text-center sm:text-left">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-center sm:justify-start gap-2">
               <div className="w-8 h-8 bg-[var(--color-accent-blue)] rounded-lg flex items-center justify-center text-white font-bold italic">S</div>
@@ -435,12 +470,22 @@ export default function ServerPage() {
 }
 
 // Карточка статистики
-function StatCard({ icon, value, label, color }: { icon: any, value: string, label: string, color: string }) {
-  const colors: any = {
+function StatCard({
+  icon,
+  value,
+  label,
+  color,
+}: {
+  icon: React.ReactNode;
+  value: string;
+  label: string;
+  color: "blue" | "emerald" | "purple" | "orange";
+}) {
+  const colors = {
     blue: "text-blue-500 bg-blue-500/10 border-blue-500/20",
     emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
     purple: "text-purple-500 bg-purple-500/10 border-purple-500/20",
-    orange: "text-orange-500 bg-orange-500/10 border-orange-500/20"
+    orange: "text-orange-500 bg-orange-500/10 border-orange-500/20",
   };
   return (
     <div className={`bg-[var(--color-card-bg)] border ${colors[color]} p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] transition-all hover:scale-[1.02] group`}>
