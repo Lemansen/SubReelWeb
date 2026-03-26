@@ -7,7 +7,9 @@ import {
   Bell,
   BookOpen,
   ChevronLeft,
+  Compass,
   Github,
+  Layers3,
   Menu,
   MessageCircle,
   ShieldCheck,
@@ -18,6 +20,7 @@ import {
   X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ProfileEntry } from "@/components/profile-entry";
 
 const content = {
   RU: {
@@ -35,6 +38,12 @@ const content = {
     stage_title: "В планах, разработке и проработке логики",
     stage_desc:
       "Сейчас мы одновременно формируем идею приложения, собираем визуальное направление и продумываем логику общения, ролей, уведомлений и связей между игроками внутри мобильного пространства Subreel.",
+    stage_plan: "В планах",
+    stage_plan_desc: "Формируем общий образ приложения и его место в экосистеме проекта.",
+    stage_build: "Разработка",
+    stage_build_desc: "Собираем визуальный каркас, экраны и первые продуктовые сценарии.",
+    stage_logic: "Логика",
+    stage_logic_desc: "Прорабатываем роли, чаты, уведомления и поведение внутри приложения.",
     preview_title: "Что хотим получить",
     preview_desc:
       "Приложение должно быть не просто чатом, а удобной точкой входа в комьюнити: общение, новости, ивенты и важные сигналы в одном месте.",
@@ -74,6 +83,12 @@ const content = {
     stage_title: "Planning, development, and logic design together",
     stage_desc:
       "Right now we are shaping the app concept, building its visual direction, and designing the logic of chats, roles, notifications, and interaction inside the Subreel mobile space at the same time.",
+    stage_plan: "Planning",
+    stage_plan_desc: "Defining the app vision and how it fits into the wider project ecosystem.",
+    stage_build: "Development",
+    stage_build_desc: "Building the visual framework, screens, and first product flows.",
+    stage_logic: "Logic",
+    stage_logic_desc: "Designing roles, chats, notifications, and interaction behavior inside the app.",
     preview_title: "What We Want to Build",
     preview_desc:
       "The app should be more than just a chat. It should become a clean entry point into the community: communication, updates, events, and important signals in one place.",
@@ -114,12 +129,17 @@ export default function MobilePage() {
           <div className="flex items-center gap-3 md:gap-6 w-auto md:w-1/3 min-w-0">
             <button
               onClick={() => router.back()}
-              className="flex items-center gap-1 text-sm font-bold uppercase tracking-wider text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors"
+              className="hidden md:flex items-center gap-1 text-sm font-bold uppercase tracking-wider text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors"
             >
               <ChevronLeft size={16} strokeWidth={3} /> {t.nav_back}
             </button>
-            <Link href="/" className="text-xl font-black tracking-tighter uppercase text-[var(--color-accent-blue)] hidden md:block">
-              Subreel
+            <Link href="/" className="flex items-center gap-3 min-w-0">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent-blue)] text-sm font-black uppercase text-white shadow-lg shadow-blue-500/20">
+                S
+              </span>
+              <span className="truncate text-lg md:text-xl font-black tracking-tighter uppercase text-[var(--color-accent-blue)]">
+                Subreel
+              </span>
             </Link>
           </div>
 
@@ -129,7 +149,8 @@ export default function MobilePage() {
               { name: t.nav_launcher, path: "/launcher" },
               { name: t.nav_server, path: "/server" },
               { name: t.nav_mobile, path: "/mobile" },
-            ].map((item) => {
+              { name: "Кабинет", path: "/account" },
+            ].filter((item) => item.path !== "/account").map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Link
@@ -164,6 +185,7 @@ export default function MobilePage() {
               </button>
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
+            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
@@ -195,6 +217,7 @@ export default function MobilePage() {
                 <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
                   {t.nav_wiki}
                 </Link>
+                <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button
@@ -213,20 +236,34 @@ export default function MobilePage() {
       <main className="grow px-4 md:px-6 py-12 md:py-24">
         <div className="max-w-6xl mx-auto space-y-16">
           <section className="relative overflow-hidden rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[linear-gradient(135deg,var(--color-card-bg),var(--color-panel-bg))] p-7 md:p-14">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.14),transparent_35%),radial-gradient(circle_at_bottom_left,rgba(59,130,246,0.08),transparent_30%)] pointer-events-none" />
             <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
               <MessageCircle size={220} strokeWidth={1} />
             </div>
-            <div className="relative z-10 max-w-3xl">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-blue)]/20 bg-[var(--color-accent-blue)]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent-blue)] mb-8">
-                <MessageCircle size={14} />
-                {t.badge}
+            <div className="relative z-10 grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-blue)]/20 bg-[var(--color-accent-blue)]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent-blue)] mb-8">
+                  <MessageCircle size={14} />
+                  {t.badge}
+                </div>
+                <h1 className="text-4xl sm:text-5xl md:text-7xl font-[1000] uppercase italic tracking-tighter leading-[0.95] md:leading-[0.9] mb-6 md:mb-8">
+                  {t.title}
+                </h1>
+                <p className="text-lg md:text-xl text-[var(--color-text-gray)] leading-relaxed font-medium max-w-2xl">
+                  {t.subtitle}
+                </p>
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-[1000] uppercase italic tracking-tighter leading-[0.95] md:leading-[0.9] mb-6 md:mb-8">
-                {t.title}
-              </h1>
-              <p className="text-lg md:text-xl text-[var(--color-text-gray)] leading-relaxed font-medium max-w-2xl">
-                {t.subtitle}
-              </p>
+
+              <div className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-bg)]/75 p-5 md:p-6 backdrop-blur-sm">
+                <div className="mb-4 text-[10px] font-black uppercase tracking-[0.24em] text-[var(--color-accent-blue)]">
+                  Subreel Mobile
+                </div>
+                <div className="grid gap-3">
+                  <HeroChip icon={<MessageCircle size={16} />} label={t.feature_chat} />
+                  <HeroChip icon={<Bell size={16} />} label={t.feature_alerts} />
+                  <HeroChip icon={<ShieldCheck size={16} />} label={t.feature_identity} />
+                </div>
+              </div>
             </div>
           </section>
 
@@ -235,7 +272,17 @@ export default function MobilePage() {
               <h2 className="text-2xl sm:text-3xl md:text-4xl font-[1000] uppercase italic tracking-tighter">{t.section_title}</h2>
               <div className="h-px grow bg-[var(--color-border-sharp)]" />
             </div>
-            <StageCard title={t.stage_title} desc={t.stage_desc} />
+            <StageCard
+              badge={t.section_title}
+              title={t.stage_title}
+              desc={t.stage_desc}
+              planTitle={t.stage_plan}
+              planDesc={t.stage_plan_desc}
+              buildTitle={t.stage_build}
+              buildDesc={t.stage_build_desc}
+              logicTitle={t.stage_logic}
+              logicDesc={t.stage_logic_desc}
+            />
           </section>
 
           <section className="grid lg:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-8 items-stretch">
@@ -264,10 +311,25 @@ export default function MobilePage() {
                       <MessageCircle size={18} />
                     </div>
                   </div>
+                  <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 p-3">
+                    <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.18em] opacity-60">
+                      <span>Live status</span>
+                      <span>beta</span>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                      <span className="text-sm font-medium text-white/90">One place for community chat, alerts, and project roles</span>
+                    </div>
+                  </div>
                   <div className="space-y-3">
                     <PhoneBubble side="left" title="Новости" text="Анонс ивента сегодня в 20:00" />
                     <PhoneBubble side="right" title="Команда" text="Нужно собрать удобную логику ролей и уведомлений." />
                     <PhoneBubble side="left" title="Игроки" text="Хочется быстрый чат и понятные оповещения." />
+                  </div>
+                  <div className="mt-5 grid grid-cols-3 gap-2">
+                    <PhonePill icon={<Compass size={14} />} label="Feed" />
+                    <PhonePill icon={<Users size={14} />} label="Clan" />
+                    <PhonePill icon={<Bell size={14} />} label="Alerts" />
                   </div>
                 </div>
               </div>
@@ -314,28 +376,144 @@ export default function MobilePage() {
 }
 
 function StageCard({
+  badge,
   title,
   desc,
+  planTitle,
+  planDesc,
+  buildTitle,
+  buildDesc,
+  logicTitle,
+  logicDesc,
 }: {
+  badge: string;
   title: string;
   desc: string;
+  planTitle: string;
+  planDesc: string;
+  buildTitle: string;
+  buildDesc: string;
+  logicTitle: string;
+  logicDesc: string;
 }) {
   return (
-    <article className="rounded-[2rem] md:rounded-[2.5rem] border border-[var(--color-border-sharp)] bg-[linear-gradient(135deg,var(--color-card-bg),var(--color-panel-bg))] p-6 md:p-10">
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-2xl border border-[var(--color-accent-blue)]/20 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] flex items-center justify-center">
-          <Sparkles size={22} />
+    <article className="rounded-[2rem] md:rounded-[2.5rem] border border-[var(--color-border-sharp)] bg-[linear-gradient(135deg,var(--color-card-bg),var(--color-panel-bg))] p-6 md:p-10 overflow-hidden relative">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--color-accent-blue)]/40 to-transparent" />
+
+      <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] mb-8">
+        <div className="max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-accent-blue)]/20 bg-[var(--color-accent-blue)]/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent-blue)] mb-5">
+            <Workflow size={14} />
+            {badge}
+          </div>
+          <h3 className="text-2xl md:text-3xl font-[1000] uppercase italic tracking-tight mb-4">{title}</h3>
+          <p className="text-[var(--color-text-gray)] text-base md:text-lg leading-relaxed font-medium max-w-4xl">{desc}</p>
         </div>
-        <div className="w-12 h-12 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-          <MessageCircle size={22} />
-        </div>
-        <div className="w-12 h-12 rounded-2xl border border-orange-500/20 bg-orange-500/10 text-orange-500 flex items-center justify-center">
-          <Workflow size={22} />
+
+        <div className="rounded-[1.75rem] border border-[var(--color-border-sharp)] bg-[var(--color-bg)]/85 p-5 md:p-6">
+          <div className="mb-5 text-[10px] font-black uppercase tracking-[0.24em] text-[var(--color-accent-blue)]">
+            Product Flow
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl border border-[var(--color-accent-blue)]/20 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] flex items-center justify-center">
+              <Sparkles size={22} />
+            </div>
+            <div className="h-px w-8 bg-[var(--color-border-sharp)]" />
+            <div className="w-12 h-12 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+              <MessageCircle size={22} />
+            </div>
+            <div className="h-px w-8 bg-[var(--color-border-sharp)]" />
+            <div className="w-12 h-12 rounded-2xl border border-orange-500/20 bg-orange-500/10 text-orange-500 flex items-center justify-center">
+              <Workflow size={22} />
+            </div>
+          </div>
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            <StageStat icon={<Compass size={14} />} label="Vision" />
+            <StageStat icon={<Layers3 size={14} />} label="UI" />
+            <StageStat icon={<Bell size={14} />} label="Logic" />
+          </div>
         </div>
       </div>
-      <h3 className="text-2xl md:text-3xl font-[1000] uppercase italic tracking-tight mb-4">{title}</h3>
-      <p className="text-[var(--color-text-gray)] text-base md:text-lg leading-relaxed font-medium max-w-4xl">{desc}</p>
+
+      <div className="grid md:grid-cols-3 gap-4 md:gap-5">
+        <StageMiniCard
+          number="01"
+          icon={<Sparkles size={18} />}
+          title={planTitle}
+          desc={planDesc}
+          accent="blue"
+        />
+        <StageMiniCard
+          number="02"
+          icon={<MessageCircle size={18} />}
+          title={buildTitle}
+          desc={buildDesc}
+          accent="emerald"
+        />
+        <StageMiniCard
+          number="03"
+          icon={<Workflow size={18} />}
+          title={logicTitle}
+          desc={logicDesc}
+          accent="orange"
+        />
+      </div>
     </article>
+  );
+}
+
+function HeroChip({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center gap-3 rounded-[1.25rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] px-4 py-3">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)]">
+        {icon}
+      </div>
+      <span className="text-sm font-bold text-[var(--color-text)]">{label}</span>
+    </div>
+  );
+}
+
+function StageStat({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 rounded-2xl border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] px-3 py-2 text-[10px] font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]">
+      {icon}
+      {label}
+    </div>
+  );
+}
+
+function StageMiniCard({
+  number,
+  icon,
+  title,
+  desc,
+  accent,
+}: {
+  number: string;
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+  accent: "blue" | "emerald" | "orange";
+}) {
+  const styles = {
+    blue: "border-blue-500/20 bg-blue-500/10 text-blue-500",
+    emerald: "border-emerald-500/20 bg-emerald-500/10 text-emerald-500",
+    orange: "border-orange-500/20 bg-orange-500/10 text-orange-500",
+  };
+
+  return (
+    <div className="rounded-[1.75rem] border border-[var(--color-border-sharp)] bg-[var(--color-bg)]/85 p-5 md:p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div className={`w-11 h-11 rounded-xl border flex items-center justify-center ${styles[accent]}`}>
+          {icon}
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-text-gray)] opacity-50">
+          {number}
+        </span>
+      </div>
+      <h4 className="text-xl font-[1000] uppercase italic tracking-tight mb-3">{title}</h4>
+      <p className="text-sm md:text-base text-[var(--color-text-gray)] leading-relaxed font-medium">{desc}</p>
+    </div>
   );
 }
 
@@ -376,6 +554,15 @@ function PhoneBubble({
         <div className="text-[10px] uppercase tracking-[0.18em] opacity-60 mb-1">{title}</div>
         <div className="text-sm leading-relaxed font-medium">{text}</div>
       </div>
+    </div>
+  );
+}
+
+function PhonePill({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white/85">
+      {icon}
+      {label}
     </div>
   );
 }

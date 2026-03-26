@@ -1,0 +1,20 @@
+http:
+  enabled: true
+  host: "127.0.0.1"
+  port: 8127
+  path: "/status"
+  statsPath: "/world-stats"
+  token: "change-me-subreel-token"
+
+push:
+  enabled: false
+  baseUrl: "https://your-site.example"
+  statusPath: "/api/internal/server-sync/status"
+  worldStatsPath: "/api/internal/server-sync/world-stats"
+  token: "change-me-subreel-token"
+  intervalSeconds: 20
+
+response:
+  includeMotd: true
+  includeVersion: true
+  leaderboardLimit: 24

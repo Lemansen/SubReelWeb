@@ -1,0 +1,6 @@
+name: SubreelStatusBridge
+version: 0.1.0
+main: online.subreel.status.SubreelStatusPlugin
+api-version: '1.21'
+author: Subreel
+description: Exposes a protected local HTTP endpoint with live Paper server status for the website.

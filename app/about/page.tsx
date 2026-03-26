@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BookOpen, ChevronLeft, Github, Heart, Menu, User, X } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ProfileEntry } from "@/components/profile-entry";
 
 export default function AboutPage() {
   const [lang, setLang] = useState<"RU" | "EN">("RU");
@@ -88,6 +89,7 @@ export default function AboutPage() {
               <div className="w-px h-4 bg-[var(--color-border-sharp)] opacity-50" />
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] transition-colors" />
             </div>
+            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
@@ -120,6 +122,7 @@ export default function AboutPage() {
                   <BookOpen size={16} />
                   {lang === "RU" ? "Вики" : "Wiki"}
                 </Link>
+                <ProfileEntry profileLabel={lang === "RU" ? "Профиль" : "Profile"} loginLabel={lang === "RU" ? "Войти" : "Login"} pendingLabel={lang === "RU" ? "Профиль" : "Profile"} mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button onClick={() => setLang(lang === "RU" ? "EN" : "RU")} className="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]">

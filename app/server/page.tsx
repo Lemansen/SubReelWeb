@@ -1,16 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { 
-  Users, 
-  Network, Copy, 
-  CheckCircle2, ExternalLink, ShieldCheck, 
-  Zap, ChevronLeft, Map as MapIcon, 
-  BookOpen, MessageSquare, Smile, HelpCircle, ArrowRight, Menu, X
+import {
+  Users,
+  Network,
+  Copy,
+  CheckCircle2,
+  ExternalLink,
+  ShieldCheck,
+  Zap,
+  ChevronLeft,
+  Map as MapIcon,
+  BookOpen,
+  BarChart3,
+  MessageSquare,
+  Smile,
+  HelpCircle,
+  ArrowRight,
+  Menu,
+  X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ProfileEntry } from "@/components/profile-entry";
 
 const content = {
   RU: {
@@ -23,12 +36,13 @@ const content = {
 
     badge_version: "1.20.1 · Java Edition",
     badge_started: "Запущен 10.03.2026",
-    
+
     hero_title_1: "Динамичность.",
     hero_title_2: "Сплочённость.",
     hero_title_3: "Разносторонность.",
-    hero_subtitle: "Subreel - это приватный сервер Minecraft с необычным геймплеем! Перед началом игры нужно подать заявку в Discord.",
-    
+    hero_subtitle:
+      "Subreel - это приватный сервер Minecraft с необычным геймплеем! Перед началом игры нужно подать заявку в Discord.",
+
     status_online: "В сети",
     status_players: "Игроков",
     status_version: "Версия 1.20.1",
@@ -40,14 +54,14 @@ const content = {
     wiki_title: "Википедия Subreel",
     wiki_subtitle: "Важно к прочтению",
     wiki_read_more: "Читать дальше",
-    
+
     wiki_cards: [
       { title: "Территории", tag: "Геймплей", desc: "Не придется больше ставить таблички и писать в ДС свою территорию." },
       { title: "Начало игры!", tag: "Основное", desc: "Инструкция «Как зайти на сервер» с поэтапным объяснением от нашей команды." },
       { title: "Вход без пароля", tag: "Аккаунт", desc: "Если вам надоело каждый раз вводить пароль при входе, то можно это выключить (при наличии лицензии)." },
       { title: "2FA", tag: "Аккаунт", desc: "Безопасность аккаунта — превыше всего. Защитите свои данные." },
       { title: "Гильдии", tag: "Геймплей", desc: "Группа людей или друзей, у которых общая цель и общие идеи. Объединение и сплоченность." },
-      { title: "Порталы", tag: "Геймплей", desc: "На сервере можно создать порталы любым размером замкнутой формы." }
+      { title: "Порталы", tag: "Геймплей", desc: "На сервере можно создать порталы любым размером замкнутой формы." },
     ],
 
     map_title: "Динамическая карта сервера",
@@ -63,7 +77,7 @@ const content = {
     faq_cards: [
       { q: "Какое ядро?", a: "Мы используем оптимизированный форк, который исправляет ошибки и вносит улучшения в производительность." },
       { q: "Какой радиус деспавна?", a: "Полезно знать тем, у кого есть фермы. Радиус уменьшен для оптимизации TPS." },
-      { q: "Характеристики VDS?", a: "Intel Core i9-13900K, 128GB DDR5 RAM, NVMe SSD Raid 1. Локация: Германия." }
+      { q: "Характеристики VDS?", a: "Intel Core i9-13900K, 128GB DDR5 RAM, NVMe SSD Raid 1. Локация: Германия." },
     ],
 
     access_title: "Доступ на Subreel",
@@ -110,7 +124,7 @@ const content = {
       { title: "Passwordless Login", tag: "Account", desc: "Tired of entering your password every time? Turn it off (premium account required)." },
       { title: "2FA", tag: "Account", desc: "Account security is paramount. Protect your data." },
       { title: "Guilds", tag: "Gameplay", desc: "A group of people or friends with a common goal and ideas. Unity and cohesion." },
-      { title: "Portals", tag: "Gameplay", desc: "You can create portals of any size and closed shape on the server." }
+      { title: "Portals", tag: "Gameplay", desc: "You can create portals of any size and closed shape on the server." },
     ],
 
     map_title: "Dynamic Server Map",
@@ -126,7 +140,7 @@ const content = {
     faq_cards: [
       { q: "What core do you use?", a: "We use an optimized fork that fixes bugs and brings performance improvements." },
       { q: "Mob despawn radius?", a: "Useful for farm builders. The radius is reduced for TPS optimization." },
-      { q: "VDS Specs?", a: "Intel Core i9-13900K, 128GB DDR5 RAM, NVMe SSD Raid 1. Location: Germany." }
+      { q: "VDS Specs?", a: "Intel Core i9-13900K, 128GB DDR5 RAM, NVMe SSD Raid 1. Location: Germany." },
     ],
 
     access_title: "Access to Subreel",
@@ -138,17 +152,28 @@ const content = {
 
     footer_disclaimer: "Not an official Minecraft service. Not approved by Mojang or Microsoft.",
     footer_since: "Since 2020",
-  }
+  },
+} as const;
+
+type LiveStatus = {
+  online: boolean;
+  version: string;
+  playersOnline: number;
+  playersMax: number;
+  motd: string;
+  tps: string;
+  updatedAt: string;
 };
 
 export default function ServerPage() {
   const [lang, setLang] = useState<"RU" | "EN">("RU");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
   const pathname = usePathname();
   const router = useRouter();
 
-  const serverIP = "play.subreel.ru";
+  const serverIP = "mc.subreel.online";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(serverIP);
@@ -158,17 +183,92 @@ export default function ServerPage() {
 
   const t = content[lang];
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStatus() {
+      try {
+        const response = await fetch("/api/server-status", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        const result = (await response.json()) as {
+          online?: boolean;
+          version?: string;
+          playersOnline?: number;
+          playersMax?: number;
+          motd?: string;
+          tps?: string;
+          updatedAt?: string;
+        };
+
+        if (!cancelled) {
+          setLiveStatus({
+            online: Boolean(result.online),
+            version: result.version ?? "1.21.11",
+            playersOnline: result.playersOnline ?? 0,
+            playersMax: result.playersMax ?? 0,
+            motd: result.motd ?? "",
+            tps: result.tps ?? "--",
+            updatedAt: result.updatedAt ?? new Date().toISOString(),
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setLiveStatus({
+            online: false,
+            version: "1.21.11",
+            playersOnline: 0,
+            playersMax: 0,
+            motd: "",
+            tps: "--",
+            updatedAt: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
+    loadStatus();
+    const interval = setInterval(loadStatus, 60000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const playersValue = liveStatus
+    ? `${liveStatus.playersOnline} / ${liveStatus.playersMax || "?"}`
+    : "-- / --";
+  const onlineValue = liveStatus
+    ? liveStatus.online
+      ? lang === "RU"
+        ? "Онлайн"
+        : "Online"
+      : lang === "RU"
+        ? "Офлайн"
+        : "Offline"
+    : lang === "RU"
+      ? "Загрузка"
+      : "Loading";
+  const motdValue = liveStatus?.motd ? liveStatus.motd : "Subreel";
+  const versionValue = liveStatus?.version ?? "1.21.11";
+  const tpsValue = liveStatus?.tps ?? "--";
+  const updatedLabel = liveStatus?.updatedAt
+    ? new Date(liveStatus.updatedAt).toLocaleTimeString(lang === "RU" ? "ru-RU" : "en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "--:--";
+
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] transition-colors">
-      
-      {/* NAVBAR */}
       <nav className="border-b border-[var(--color-border-sharp)] sticky top-0 bg-[var(--color-bg)]/70 backdrop-blur-md z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 min-h-16 py-3 md:py-0 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 relative">
-          
-          {/* Левая часть: Кнопка назад и Лого */}
           <div className="flex items-center gap-3 md:gap-6 w-auto md:w-1/3 min-w-0">
-            <button 
-              onClick={() => router.back()} 
+            <button
+              onClick={() => router.back()}
               className="flex items-center gap-1 text-sm font-bold uppercase tracking-wider text-[var(--color-text-gray)] hover:text-[var(--color-accent-blue)] transition-colors"
             >
               <ChevronLeft size={16} strokeWidth={3} /> {t.nav_back}
@@ -178,17 +278,16 @@ export default function ServerPage() {
             </Link>
           </div>
 
-          {/* Центр: Ссылки */}
           <div className="hidden md:flex order-3 md:order-none w-full md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2 items-center justify-center gap-3 md:gap-8 overflow-x-auto">
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
-              { name: t.nav_server, path: "/server" }
+              { name: t.nav_server, path: "/server" },
             ].map((item) => {
               const isActive = pathname === item.path;
               return (
-                <Link 
-                  key={item.path} 
+                <Link
+                  key={item.path}
                   href={item.path}
                   className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all relative py-2 ${
                     isActive ? "text-[var(--color-accent-blue)]" : "text-[var(--color-text-gray)] hover:text-[var(--color-text)]"
@@ -201,12 +300,10 @@ export default function ServerPage() {
             })}
           </div>
 
-          {/* Правая часть: Управление (Вики, Язык, Тема) */}
           <div className="hidden md:flex items-center justify-end w-auto md:w-1/3 gap-3 ml-auto">
             <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)] shadow-sm">
-              
-              <Link 
-                href="/wiki" 
+              <Link
+                href="/wiki"
                 className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-sm font-bold uppercase transition-colors group"
               >
                 <BookOpen size={14} className="text-[var(--color-text-gray)] group-hover:text-[var(--color-accent-blue)] transition-colors" />
@@ -214,16 +311,17 @@ export default function ServerPage() {
               </Link>
 
               <div className="w-px h-4 bg-[var(--color-border-sharp)] mx-0.5" />
-              
-              <button 
-                onClick={() => setLang(lang === "RU" ? "EN" : "RU")} 
+
+              <button
+                onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
                 className="px-2 md:px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-sm font-bold uppercase text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
               >
                 {lang}
               </button>
-              
+
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
+            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
@@ -255,6 +353,7 @@ export default function ServerPage() {
                 <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
                   {t.nav_wiki}
                 </Link>
+                <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button
@@ -270,13 +369,11 @@ export default function ServerPage() {
         </div>
       </nav>
 
-      {/* HERO SECTION */}
       <section className="relative pt-14 md:pt-20 pb-14 md:pb-20 px-4 md:px-6 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:40px_40px] opacity-[0.05] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
-        
-        <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+
+        <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
           <div className="text-center lg:text-left">
-            
             <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-8">
               <div className="text-[12px] font-bold rounded-lg px-3 py-1.5 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] uppercase tracking-wider">
                 {t.badge_version}
@@ -285,17 +382,17 @@ export default function ServerPage() {
                 {t.badge_started}
               </div>
             </div>
-            
+
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-[1000] tracking-[-0.04em] mb-6 uppercase italic leading-[0.95] md:leading-[0.9] text-balance">
               <div className="text-[var(--color-text)]">{t.hero_title_1}</div>
               <div className="text-[var(--color-text)]">{t.hero_title_2}</div>
               <div className="text-[var(--color-accent-blue)]">{t.hero_title_3}</div>
             </h1>
-            
+
             <p className="text-lg text-[var(--color-text-gray)] mb-10 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
               {t.hero_subtitle}
             </p>
-            
+
             <div className="flex flex-wrap justify-center lg:justify-start gap-4">
               <a
                 href="https://discord.gg/t7bjdm9uDC"
@@ -305,27 +402,71 @@ export default function ServerPage() {
               >
                 {t.join_btn} <ExternalLink size={20} strokeWidth={3} />
               </a>
-              
-              <button 
-                onClick={copyToClipboard} 
+
+              <button
+                onClick={copyToClipboard}
                 className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
               >
                 {copied ? <CheckCircle2 size={20} className="text-emerald-500" strokeWidth={3} /> : <Copy size={20} strokeWidth={3} />}
                 {copied ? t.copied : t.copy_ip}
               </button>
+
+              <Link
+                href="/wiki"
+                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
+              >
+                <BookOpen size={20} strokeWidth={3} />
+                {t.rules_btn}
+              </Link>
+
+              <Link
+                href="/stats"
+                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
+              >
+                <BarChart3 size={20} strokeWidth={3} />
+                Статистика
+              </Link>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)]/80 backdrop-blur-sm p-4 md:p-5 max-w-xl mx-auto lg:mx-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-[10px] uppercase font-black tracking-[0.22em] text-[var(--color-text-gray)]">
+                    {t.ip_label}
+                  </div>
+                  <div className="mt-1 text-lg md:text-xl font-black tracking-tight text-[var(--color-accent-blue)] break-all">
+                    {serverIP}
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-text-gray)]">
+                    <span
+                      className={`h-2.5 w-2.5 rounded-full ${
+                        liveStatus?.online ? "bg-emerald-500 shadow-[0_0_12px_rgba(34,197,94,0.8)]" : "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.7)]"
+                      }`}
+                    />
+                    {onlineValue}
+                  </div>
+                </div>
+                <div className="text-left sm:text-right">
+                  <div className="text-[10px] uppercase font-black tracking-[0.22em] text-[var(--color-text-gray)]">
+                    {lang === "RU" ? "Обновлено" : "Updated"}
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-[var(--color-text)]">
+                    {updatedLabel}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 md:gap-6">
-            <StatCard icon={<Users size={32}/>} value="42 / 100" label={t.status_players} color="blue" />
-            <StatCard icon={<Zap size={32}/>} value="20.0" label="TPS" color="emerald" />
-            <StatCard icon={<ShieldCheck size={32}/>} value="L7" label="DDoS Protection" color="purple" />
-            <StatCard icon={<Network size={32}/>} value="1.20.1" label={t.status_version} color="orange" />
+          <div className="grid grid-cols-2 gap-3 md:gap-6">
+            <StatCard icon={<Users size={32} />} value={playersValue} label={t.status_players} color="blue" />
+            <StatCard icon={<Zap size={32} />} value={tpsValue} label="TPS" color="emerald" />
+            <StatCard icon={<ShieldCheck size={32} />} value={motdValue} label="MOTD" color="purple" />
+            <StatCard icon={<Network size={32} />} value={versionValue} label={t.status_version} color="orange" />
           </div>
         </div>
       </section>
 
-      {/* WIKI SECTION */}
       <section className="px-4 md:px-6 py-16 md:py-20 relative">
         <div className="max-w-7xl mx-auto">
           <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] rounded-[2.5rem] p-8 md:p-12">
@@ -352,14 +493,23 @@ export default function ServerPage() {
                 </Link>
               ))}
             </div>
+
+            <div className="mt-8 flex justify-center">
+              <Link
+                href="/wiki"
+                className="inline-flex items-center gap-3 bg-[var(--color-bg)] border border-[var(--color-border-sharp)] px-6 py-4 rounded-xl font-black uppercase italic tracking-wider text-[var(--color-text)] hover:border-[var(--color-accent-blue)] hover:text-[var(--color-accent-blue)] transition-colors"
+              >
+                <BookOpen size={18} strokeWidth={2.5} />
+                {t.wiki_read_more}
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* DYNAMIC MAP BANNER */}
       <section className="px-4 md:px-6 py-8 md:py-10 relative">
         <div className="max-w-7xl mx-auto">
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[var(--color-panel-bg)] to-[var(--color-accent-blue)]/10 border border-[var(--color-border-sharp)] flex flex-col md:flex-row items-center justify-between p-8 md:p-16 gap-8">
+          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[var(--color-panel-bg)] to-[var(--color-accent-blue)]/10 border border-[var(--color-border-sharp)] flex flex-col md:flex-row items-center justify-between p-6 md:p-16 gap-8">
             <div className="relative z-10 max-w-xl text-center md:text-left">
               <div className="bg-[var(--color-accent-blue)]/20 text-[var(--color-accent-blue)] inline-block px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest mb-6">
                 Squaremap
@@ -375,38 +525,36 @@ export default function ServerPage() {
               </Link>
             </div>
             <div className="relative w-full md:w-1/2 h-64 md:h-auto flex items-center justify-center opacity-50 pointer-events-none">
-               <MapIcon size={200} className="text-[var(--color-accent-blue)]" strokeWidth={0.5} />
+              <MapIcon size={200} className="text-[var(--color-accent-blue)]" strokeWidth={0.5} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* FEATURES / MODS */}
       <section className="px-4 md:px-6 py-8 md:py-10 relative">
         <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
           <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-10 md:p-12 rounded-[2.5rem] flex flex-col justify-between">
             <div>
-               <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-6">
-                 <MessageSquare size={28} strokeWidth={2.5} />
-               </div>
-               <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4">{t.mods_title_1}</h3>
-               <p className="text-[var(--color-text-gray)] font-medium text-lg leading-relaxed">{t.mods_desc_1}</p>
+              <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-6">
+                <MessageSquare size={28} strokeWidth={2.5} />
+              </div>
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4">{t.mods_title_1}</h3>
+              <p className="text-[var(--color-text-gray)] font-medium text-lg leading-relaxed">{t.mods_desc_1}</p>
             </div>
           </div>
 
           <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-10 md:p-12 rounded-[2.5rem] flex flex-col justify-between">
             <div>
-               <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-6">
-                 <Smile size={28} strokeWidth={2.5} />
-               </div>
-               <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4">{t.mods_title_2}</h3>
-               <p className="text-[var(--color-text-gray)] font-medium text-lg leading-relaxed">{t.mods_desc_2}</p>
+              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-6">
+                <Smile size={28} strokeWidth={2.5} />
+              </div>
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4">{t.mods_title_2}</h3>
+              <p className="text-[var(--color-text-gray)] font-medium text-lg leading-relaxed">{t.mods_desc_2}</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* FAQ SECTION */}
       <section className="px-4 md:px-6 py-16 md:py-20 bg-white/[0.02] border-y border-[var(--color-border-sharp)]">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-12 text-center">
@@ -414,9 +562,14 @@ export default function ServerPage() {
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
             {t.faq_cards.map((faq, idx) => (
-              <div key={idx} className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-8 rounded-[2rem] hover:border-[var(--color-text-gray)] transition-colors">
-                <div className="w-12 h-12 rounded-xl bg-[var(--color-bg)] flex items-center justify-center mb-6 text-[var(--color-text-gray)]">
-                  <HelpCircle size={24} strokeWidth={2.5} />
+              <div key={idx} className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-6 md:p-8 rounded-[2rem] hover:border-[var(--color-accent-blue)] hover:shadow-[0_20px_40px_-24px_rgba(59,130,246,0.35)] transition-all">
+                <div className="flex items-center justify-between gap-4 mb-6">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text-gray)]">
+                    <HelpCircle size={24} strokeWidth={2.5} />
+                  </div>
+                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">
+                    0{idx + 1}
+                  </div>
                 </div>
                 <h3 className="text-xl font-black uppercase italic tracking-tight mb-4">{faq.q}</h3>
                 <p className="text-[var(--color-text-gray)] font-medium leading-relaxed">{faq.a}</p>
@@ -426,7 +579,6 @@ export default function ServerPage() {
         </div>
       </section>
 
-      {/* FREE ACCESS BANNER */}
       <section className="px-4 md:px-6 py-18 md:py-24 relative overflow-hidden">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-6">
@@ -435,7 +587,7 @@ export default function ServerPage() {
           <p className="text-lg md:text-xl text-[var(--color-text-gray)] font-medium mb-12">
             {t.access_desc}
           </p>
-          
+
           <div className="bg-gradient-to-br from-[var(--color-accent-blue)] to-blue-800 p-1 rounded-[3rem]">
             <div className="bg-[var(--color-bg)] rounded-[2.8rem] py-16 px-8 relative overflow-hidden">
               <div className="relative z-10">
@@ -451,7 +603,6 @@ export default function ServerPage() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="py-10 mt-auto bg-[var(--color-bg)] border-t border-[var(--color-border-sharp)]">
         <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col sm:flex-row justify-between items-center gap-8 text-center sm:text-left">
           <div className="flex flex-col gap-2">
@@ -472,7 +623,6 @@ export default function ServerPage() {
   );
 }
 
-// Карточка статистики
 function StatCard({
   icon,
   value,
@@ -491,12 +641,12 @@ function StatCard({
     orange: "text-orange-500 bg-orange-500/10 border-orange-500/20",
   };
   return (
-    <div className={`bg-[var(--color-card-bg)] border ${colors[color]} p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] transition-all hover:scale-[1.02] group`}>
-      <div className={`w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-transform group-hover:rotate-3 ${colors[color].split(' ')[0]} ${colors[color].split(' ')[1]}`}>
+    <div className={`bg-[var(--color-card-bg)] border ${colors[color]} p-5 md:p-8 rounded-[1.75rem] md:rounded-[2.5rem] transition-all hover:scale-[1.02] group`}>
+      <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-transform group-hover:rotate-3 ${colors[color].split(" ")[0]} ${colors[color].split(" ")[1]}`}>
         {icon}
       </div>
-      <div className="text-2xl md:text-3xl font-[1000] tracking-tighter mb-1 uppercase italic leading-none">{value}</div>
-      <div className="text-[9px] md:text-[10px] uppercase font-bold text-[var(--color-text-gray)] tracking-widest">{label}</div>
+      <div className="text-xl md:text-3xl font-[1000] tracking-tighter mb-1 uppercase italic leading-none break-all">{value}</div>
+      <div className="text-[8px] md:text-[10px] uppercase font-bold text-[var(--color-text-gray)] tracking-[0.22em]">{label}</div>
     </div>
   );
 }

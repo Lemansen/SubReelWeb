@@ -1,7 +1,8 @@
 // @ts-nocheck
-import * as __fd_glob_6 from "../content/docs/rules.mdx?collection=docs"
-import * as __fd_glob_5 from "../content/docs/map.mdx?collection=docs"
-import * as __fd_glob_4 from "../content/docs/launcher.mdx?collection=docs"
+import * as __fd_glob_7 from "../content/docs/rules.mdx?collection=docs"
+import * as __fd_glob_6 from "../content/docs/map.mdx?collection=docs"
+import * as __fd_glob_5 from "../content/docs/launcher.mdx?collection=docs"
+import * as __fd_glob_4 from "../content/docs/launcher-auth.mdx?collection=docs"
 import * as __fd_glob_3 from "../content/docs/index.mdx?collection=docs"
 import * as __fd_glob_2 from "../content/docs/faq.mdx?collection=docs"
 import * as __fd_glob_1 from "../content/docs/commands.mdx?collection=docs"
@@ -14,4 +15,4 @@ const create = server<typeof Config, import("fumadocs-mdx/runtime/types").Intern
   }
 }>({"doc":{"passthroughs":["extractedReferences"]}});
 
-export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, }, {"commands.mdx": __fd_glob_1, "faq.mdx": __fd_glob_2, "index.mdx": __fd_glob_3, "launcher.mdx": __fd_glob_4, "map.mdx": __fd_glob_5, "rules.mdx": __fd_glob_6, });
+export const docs = await create.docs("docs", "content/docs", {"meta.json": __fd_glob_0, }, {"commands.mdx": __fd_glob_1, "faq.mdx": __fd_glob_2, "index.mdx": __fd_glob_3, "launcher-auth.mdx": __fd_glob_4, "launcher.mdx": __fd_glob_5, "map.mdx": __fd_glob_6, "rules.mdx": __fd_glob_7, });

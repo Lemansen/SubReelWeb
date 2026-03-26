@@ -11,6 +11,7 @@ import {
   ChevronLeft, Menu, X
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ProfileEntry } from "@/components/profile-entry";
 
 const content = {
   RU: {
@@ -57,6 +58,13 @@ const content = {
     soon_social_desc: "Система друзей, личные сообщения и поиск команды для совместной игры.",
     soon_themes: "Кастомизация UI",
     soon_themes_desc: "Настраивай внешний вид самого лаунчера: темы, цвета и фоновые изображения.",
+    auth_title: "Единый вход для сайта и лаунчера",
+    auth_desc: "Общая авторизация уже готовится в проекте: сайт, кабинет и лаунчер смогут использовать один профиль и один поток доступа.",
+    auth_step_one: "Войди на сайте или создай аккаунт",
+    auth_step_two: "Открой кабинет и получи launcher token",
+    auth_step_three: "Используй тот же аккаунт внутри лаунчера",
+    auth_doc_btn: "Документация входа",
+    auth_account_btn: "Открыть кабинет",
 
     cta_title: "Чего бы вы хотели увидеть у нас в лаунчере?",
     cta_desc: "Мы делаем продукт для игроков и прислушиваемся к комьюнити. Нашли баг или есть гениальная идея? Ждем вас в нашем Discord!",
@@ -109,6 +117,13 @@ const content = {
     soon_social_desc: "Friends system, private messages, and finding a team for co-op play.",
     soon_themes: "UI Customization",
     soon_themes_desc: "Customize the look of the launcher itself: themes, colors, and background images.",
+    auth_title: "One account for website and launcher",
+    auth_desc: "The shared auth flow is already being prepared: the website, account page, and launcher will use one profile and one access flow.",
+    auth_step_one: "Sign in on the website or create an account",
+    auth_step_two: "Open the account page and get a launcher token",
+    auth_step_three: "Use the same account inside the launcher",
+    auth_doc_btn: "Auth docs",
+    auth_account_btn: "Open account",
 
     cta_title: "What would you like to see in our launcher?",
     cta_desc: "We build a product for players and listen to the community. Found a bug or have a brilliant idea? We are waiting for you in our Discord!",
@@ -173,8 +188,9 @@ export default function DownloadPage() {
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
-              { name: t.nav_server, path: "/server" }
-            ].map((item) => {
+              { name: t.nav_server, path: "/server" },
+              { name: "Кабинет", path: "/account" }
+            ].filter((item) => item.path !== "/account").map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Link 
@@ -214,6 +230,7 @@ export default function DownloadPage() {
               
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
+            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
@@ -245,6 +262,7 @@ export default function DownloadPage() {
                 <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
                   {t.nav_wiki}
                 </Link>
+                <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button
@@ -439,6 +457,45 @@ export default function DownloadPage() {
             />
           </div>
         </section>
+
+        <section className="pb-24">
+          <div className="rounded-[2.5rem] border border-[var(--color-border-sharp)] bg-[linear-gradient(135deg,var(--color-card-bg),var(--color-panel-bg))] p-8 md:p-12">
+            <div className="grid lg:grid-cols-[1fr_0.9fr] gap-8 md:gap-10 items-start">
+              <div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-xs font-black uppercase tracking-[0.2em] mb-6 border border-[var(--color-accent-blue)]/20">
+                  <Lock size={16} />
+                  Launcher Auth
+                </div>
+                <h2 className="text-3xl md:text-5xl font-[1000] uppercase italic tracking-tighter mb-5">
+                  {t.auth_title}
+                </h2>
+                <p className="text-[var(--color-text-gray)] text-base md:text-lg leading-relaxed font-medium max-w-2xl">
+                  {t.auth_desc}
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <Link href="/wiki/launcher-auth" className="inline-flex items-center justify-center gap-3 rounded-[1.2rem] bg-[var(--color-accent-blue)] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition-transform hover:scale-[1.01] active:scale-95">
+                    <BookOpen size={16} />
+                    {t.auth_doc_btn}
+                  </Link>
+                  <Link href="/account" className="inline-flex items-center justify-center gap-3 rounded-[1.2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)] transition-colors hover:bg-[var(--color-panel-hover)]">
+                    <User size={16} />
+                    {t.auth_account_btn}
+                  </Link>
+                  <Link href="/launcher/login" className="inline-flex items-center justify-center gap-3 rounded-[1.2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)] transition-colors hover:bg-[var(--color-panel-hover)]">
+                    <Lock size={16} />
+                    {lang === "RU" ? "Экран входа" : "Login Screen"}
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid gap-4">
+                <AuthStep number="01" text={t.auth_step_one} />
+                <AuthStep number="02" text={t.auth_step_two} />
+                <AuthStep number="03" text={t.auth_step_three} />
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
             {/* 3. БЛОК: ОБРАТНАЯ СВЯЗЬ (DISCORD) */}
@@ -542,6 +599,19 @@ function FeatureCard({ icon, title, desc, badge }: { icon: React.ReactNode, titl
       </div>
       <h3 className="text-xl md:text-2xl font-black uppercase italic mb-4 tracking-tighter group-hover:text-[var(--color-accent-blue)] transition-colors">{title}</h3>
       <p className="text-[var(--color-text-gray)] text-sm md:text-base font-medium leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">{desc}</p>
+    </div>
+  );
+}
+
+function AuthStep({ number, text }: { number: string; text: string }) {
+  return (
+    <div className="rounded-[1.75rem] border border-[var(--color-border-sharp)] bg-[var(--color-bg)] p-5 md:p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-xs font-black uppercase tracking-[0.18em]">
+          {number}
+        </div>
+        <p className="text-sm md:text-base font-medium leading-relaxed text-[var(--color-text-gray)]">{text}</p>
+      </div>
     </div>
   );
 }
