@@ -78,3 +78,123 @@ body {
 .panel:hover {
   background-color: var(--color-panel-hover);
 }
+
+/* ===============================
+   Wiki / Fumadocs
+   =============================== */
+:root {
+  --color-fd-background: var(--color-bg);
+  --color-fd-foreground: var(--color-text);
+  --color-fd-muted: var(--color-panel-bg);
+  --color-fd-muted-foreground: var(--color-text-gray);
+  --color-fd-popover: var(--color-card-bg);
+  --color-fd-popover-foreground: var(--color-text);
+  --color-fd-card: var(--color-card-bg);
+  --color-fd-card-foreground: var(--color-text);
+  --color-fd-border: color-mix(in srgb, var(--color-border-sharp) 78%, transparent);
+  --color-fd-primary: var(--color-accent-blue);
+  --color-fd-primary-foreground: #ffffff;
+  --color-fd-secondary: var(--color-panel-bg);
+  --color-fd-secondary-foreground: var(--color-text);
+  --color-fd-accent: color-mix(in srgb, var(--color-accent-blue) 12%, transparent);
+  --color-fd-accent-foreground: var(--color-text);
+  --color-fd-ring: var(--color-accent-blue);
+  --color-fd-overlay: rgba(9, 9, 11, 0.45);
+}
+
+.wiki-shell {
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent-blue) 10%, transparent), transparent 28%),
+    radial-gradient(circle at bottom left, color-mix(in srgb, var(--color-accent-blue) 6%, transparent), transparent 24%),
+    var(--color-bg);
+}
+
+.wiki-shell [data-sidebar],
+.wiki-shell aside {
+  background: color-mix(in srgb, var(--color-panel-bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+}
+
+.wiki-sidebar-banner {
+  margin: 0.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent-blue) 18%, var(--color-border-sharp));
+  border-radius: 1.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent-blue) 10%, var(--color-card-bg)), var(--color-card-bg));
+  box-shadow: 0 20px 50px -30px color-mix(in srgb, var(--color-accent-blue) 40%, transparent);
+}
+
+.wiki-sidebar-banner__eyebrow {
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-accent-blue);
+}
+
+.wiki-sidebar-banner__title {
+  margin-top: 0.6rem;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  text-transform: uppercase;
+  font-style: italic;
+}
+
+.wiki-sidebar-banner__text {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-text-gray);
+}
+
+.wiki-hero-card {
+  margin-bottom: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--color-accent-blue) 18%, var(--color-border-sharp));
+  border-radius: 2rem;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at top right, color-mix(in srgb, var(--color-accent-blue) 14%, transparent), transparent 34%),
+    linear-gradient(135deg, var(--color-card-bg), var(--color-panel-bg));
+  box-shadow: 0 30px 60px -40px color-mix(in srgb, var(--color-accent-blue) 45%, transparent);
+}
+
+.wiki-hero-card__eyebrow {
+  margin-bottom: 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-accent-blue);
+}
+
+.wiki-prose {
+  border: 1px solid color-mix(in srgb, var(--color-border-sharp) 82%, transparent);
+  border-radius: 2rem;
+  padding: 1.25rem;
+  background: color-mix(in srgb, var(--color-card-bg) 90%, transparent);
+}
+
+.wiki-prose :is(h1, h2, h3, h4) {
+  letter-spacing: -0.04em;
+}
+
+.wiki-prose :is(a) {
+  text-underline-offset: 0.24em;
+}
+
+.wiki-prose :is(pre, code) {
+  border-radius: 1rem;
+}
+
+@media (min-width: 768px) {
+  .wiki-hero-card {
+    padding: 2rem;
+    border-radius: 2.5rem;
+  }
+
+  .wiki-prose {
+    padding: 2rem;
+    border-radius: 2.5rem;
+  }
+}

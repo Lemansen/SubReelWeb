@@ -11,6 +11,7 @@ import {
   BookOpen, MessageSquare, Smile, HelpCircle, ArrowRight, Menu, X
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ProfileEntry } from "@/components/profile-entry";
 
 const content = {
   RU: {
@@ -183,8 +184,8 @@ export default function ServerPage() {
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
-              { name: t.nav_server, path: "/server" }
-            ].map((item) => {
+              { name: t.nav_server, path: "/server" },
+            ].filter((item) => item.path !== "/account").map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Link 
@@ -223,7 +224,7 @@ export default function ServerPage() {
               </button>
               
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
-            </div>
+            </div>  
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
@@ -255,6 +256,7 @@ export default function ServerPage() {
                 <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
                   {t.nav_wiki}
                 </Link>
+                <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button

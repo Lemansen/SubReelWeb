@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "launcher",
+    "launcher-auth",
     "commands",
     "rules",
     "faq",

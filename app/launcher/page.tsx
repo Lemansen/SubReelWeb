@@ -11,6 +11,7 @@ import {
   ChevronLeft, Menu, X
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { ProfileEntry } from "@/components/profile-entry";
 
 const content = {
   RU: {
@@ -173,8 +174,8 @@ export default function DownloadPage() {
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
-              { name: t.nav_server, path: "/server" }
-            ].map((item) => {
+              { name: t.nav_server, path: "/server" },
+            ].filter((item) => item.path !== "/account").map((item) => {
               const isActive = pathname === item.path;
               return (
                 <Link 
@@ -245,6 +246,7 @@ export default function DownloadPage() {
                 <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
                   {t.nav_wiki}
                 </Link>
+                <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button
@@ -542,6 +544,19 @@ function FeatureCard({ icon, title, desc, badge }: { icon: React.ReactNode, titl
       </div>
       <h3 className="text-xl md:text-2xl font-black uppercase italic mb-4 tracking-tighter group-hover:text-[var(--color-accent-blue)] transition-colors">{title}</h3>
       <p className="text-[var(--color-text-gray)] text-sm md:text-base font-medium leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">{desc}</p>
+    </div>
+  );
+}
+
+function AuthStep({ number, text }: { number: string; text: string }) {
+  return (
+    <div className="rounded-[1.75rem] border border-[var(--color-border-sharp)] bg-[var(--color-bg)] p-5 md:p-6">
+      <div className="flex items-start gap-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-xs font-black uppercase tracking-[0.18em]">
+          {number}
+        </div>
+        <p className="text-sm md:text-base font-medium leading-relaxed text-[var(--color-text-gray)]">{text}</p>
+      </div>
     </div>
   );
 }

@@ -45,10 +45,15 @@ export default async function WikiPage({ params }: WikiPageProps) {
 
   return (
     <DocsPage toc={pageData.toc}>
-      <DocsTitle>{pageData.title}</DocsTitle>
-      <DocsDescription>{pageData.description}</DocsDescription>
+      <div className="wiki-hero-card">
+        <div className="wiki-hero-card__eyebrow">Subreel Wiki</div>
+        <DocsTitle>{pageData.title}</DocsTitle>
+        <DocsDescription>{pageData.description}</DocsDescription>
+      </div>
       <DocsBody>
-        <MDXContent components={getMDXComponents()} />
+        <div className="wiki-prose">
+          <MDXContent components={getMDXComponents()} />
+        </div>
       </DocsBody>
     </DocsPage>
   );
