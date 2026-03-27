@@ -172,7 +172,7 @@ export default function ServerPage() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const serverIP = "93.88.206.6:20633";
+  const serverIP = "mc.subreel.online";
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(serverIP);
