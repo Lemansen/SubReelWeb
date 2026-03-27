@@ -20,7 +20,6 @@ import {
   X,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { ProfileEntry } from "@/components/profile-entry";
 
 const content = {
   RU: {
@@ -184,7 +183,6 @@ export default function MobilePage() {
               </button>
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
-            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
@@ -216,7 +214,6 @@ export default function MobilePage() {
                 <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
                   {t.nav_wiki}
                 </Link>
-                <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" mobile onNavigate={() => setMobileMenuOpen(false)} />
               </div>
               <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
                 <button

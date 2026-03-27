@@ -13,7 +13,6 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { ProfileEntry } from "@/components/profile-entry";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 type Lang = "RU" | "EN";
@@ -172,7 +171,6 @@ export default function LauncherLoginPage() {
               </button>
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
-            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
         </div>
       </nav>
