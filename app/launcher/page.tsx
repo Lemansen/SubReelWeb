@@ -297,7 +297,7 @@ export default function DownloadPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               {os === "Windows" ? (
                 <a 
-                  href="https://github.com/Lemansen/SubReel/releases/download/0.1.2/SubReel.exe"
+                  href="https://github.com/Lemansen/SubReel/releases/download/0.1.3/SubReel.exe"
                   className="group relative flex-1 flex items-center gap-4 md:gap-6 bg-[var(--color-accent-blue)] text-white px-6 md:px-8 py-4 md:py-5 rounded-[1.75rem] md:rounded-[2rem] font-black transition-all hover:scale-[1.02] active:scale-95 shadow-[0_20px_40px_-10px_rgba(59,130,246,0.4)] cursor-pointer"
                 >
                   <div className="text-left">
