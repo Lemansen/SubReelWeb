@@ -1,5 +1,5 @@
 http:
-  enabled: true
+  enabled: false
   host: "127.0.0.1"
   port: 8127
   path: "/status"
@@ -7,8 +7,8 @@ http:
   token: "change-me-subreel-token"
 
 push:
-  enabled: false
-  baseUrl: "https://your-site.example"
+  enabled: true
+  baseUrl: "https://subreel.ru"
   statusPath: "/api/internal/server-sync/status"
   worldStatsPath: "/api/internal/server-sync/world-stats"
   token: "change-me-subreel-token"

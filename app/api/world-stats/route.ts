@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 import { readSyncedWorldStats } from "@/lib/server-sync-store";
 
-const STATUS_PLUGIN_URL = process.env.SERVER_STATUS_PLUGIN_URL;
-const WORLD_STATS_PLUGIN_URL =
-  process.env.SERVER_WORLD_STATS_PLUGIN_URL ??
-  (STATUS_PLUGIN_URL ? STATUS_PLUGIN_URL.replace(/\/status$/, "/world-stats") : undefined);
-const PLUGIN_TOKEN = process.env.SERVER_STATUS_PLUGIN_TOKEN;
+const SERVER_ADDRESS = "93.88.206.6:20633";
 const CACHE_TTL_MS = 60_000;
+
+type MCSrvStatusResponse = {
+  online?: boolean;
+  players?: {
+    online?: number;
+    list?: string[];
+  };
+};
 
 type WorldStatsPayload = {
   ok: boolean;
@@ -46,9 +50,9 @@ let cachedPayload:
     }
   | null = null;
 
-function fallbackPayload(): WorldStatsPayload {
+function buildFallbackPayload(players: string[] = [], playersOnline = 0): WorldStatsPayload {
   return {
-    ok: false,
+    ok: true,
     totals: {
       playTicks: 0,
       deaths: 0,
@@ -61,9 +65,20 @@ function fallbackPayload(): WorldStatsPayload {
       distanceSwumCm: 0,
       chatMessages: 0,
       achievements: 0,
-      uniquePlayers: 0,
+      uniquePlayers: Math.max(playersOnline, players.length),
     },
-    leaderboard: [],
+    leaderboard: players.map((name) => ({
+      name,
+      online: true,
+      playTicks: 0,
+      deaths: 0,
+      playerKills: 0,
+      mobKills: 0,
+      blocksBroken: 0,
+      blocksPlaced: 0,
+      distanceWalkedCm: 0,
+      distanceSwumCm: 0,
+    })),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -79,54 +94,26 @@ export async function GET() {
     return NextResponse.json(cachedPayload.payload);
   }
 
-  if (!WORLD_STATS_PLUGIN_URL) {
-    const payload = fallbackPayload();
-    cachedPayload = { timestamp: Date.now(), payload };
-    return NextResponse.json(payload);
-  }
-
   try {
-    const response = await fetch(WORLD_STATS_PLUGIN_URL, {
+    const response = await fetch(`https://api.mcsrvstat.us/3/${SERVER_ADDRESS}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(2500),
-      headers: PLUGIN_TOKEN
-        ? {
-            Authorization: `Bearer ${PLUGIN_TOKEN}`,
-          }
-        : undefined,
     });
 
     if (!response.ok) {
-      const payload = fallbackPayload();
+      const payload = buildFallbackPayload();
       cachedPayload = { timestamp: Date.now(), payload };
       return NextResponse.json(payload);
     }
 
-    const data = (await response.json()) as Partial<WorldStatsPayload>;
-    const payload: WorldStatsPayload = {
-      ok: Boolean(data.ok),
-      totals: {
-        playTicks: data.totals?.playTicks ?? 0,
-        deaths: data.totals?.deaths ?? 0,
-        playerKills: data.totals?.playerKills ?? 0,
-        mobKills: data.totals?.mobKills ?? 0,
-        blocksBroken: data.totals?.blocksBroken ?? 0,
-        blocksPlaced: data.totals?.blocksPlaced ?? 0,
-        itemsCrafted: data.totals?.itemsCrafted ?? 0,
-        distanceWalkedCm: data.totals?.distanceWalkedCm ?? 0,
-        distanceSwumCm: data.totals?.distanceSwumCm ?? 0,
-        chatMessages: data.totals?.chatMessages ?? 0,
-        achievements: data.totals?.achievements ?? 0,
-        uniquePlayers: data.totals?.uniquePlayers ?? 0,
-      },
-      leaderboard: data.leaderboard ?? [],
-      updatedAt: data.updatedAt ?? new Date().toISOString(),
-    };
+    const data = (await response.json()) as MCSrvStatusResponse;
+    const players = data.players?.list ?? [];
+    const payload = buildFallbackPayload(players, data.players?.online ?? 0);
 
     cachedPayload = { timestamp: Date.now(), payload };
     return NextResponse.json(payload);
   } catch {
-    const payload = fallbackPayload();
+    const payload = buildFallbackPayload();
     cachedPayload = { timestamp: Date.now(), payload };
     return NextResponse.json(payload);
   }

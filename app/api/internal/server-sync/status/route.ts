@@ -1,22 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeSyncedStatus, type SyncedStatusPayload } from "@/lib/server-sync-store";
 
-const SYNC_TOKEN = process.env.SERVER_SYNC_TOKEN ?? process.env.SERVER_STATUS_PLUGIN_TOKEN;
-
-function isAuthorized(request: NextRequest) {
-  if (!SYNC_TOKEN) {
-    return false;
-  }
-
-  const authHeader = request.headers.get("authorization");
-  return authHeader === `Bearer ${SYNC_TOKEN}`;
-}
-
 export async function POST(request: NextRequest) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
-
   const body = (await request.json()) as Partial<SyncedStatusPayload>;
 
   const payload: SyncedStatusPayload = {

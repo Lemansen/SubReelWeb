@@ -1,31 +1,25 @@
 import { NextResponse } from "next/server";
 import { readSyncedStatus } from "@/lib/server-sync-store";
 
-const SERVER_HOST = "93.88.206.6:20633";
+const SERVER_ADDRESS = "93.88.206.6:20633";
+const SERVER_IP = "93.88.206.6";
 const SERVER_PORT = 20633;
 const CACHE_TTL_MS = 60_000;
-const PLUGIN_URL = process.env.SERVER_STATUS_PLUGIN_URL;
-const PLUGIN_TOKEN = process.env.SERVER_STATUS_PLUGIN_TOKEN;
 
-let cachedStatus:
-  | {
-      timestamp: number;
-      payload: {
-        ok: boolean;
-        online: boolean;
-        host: string;
-        ip: string;
-        port: number;
-        version: string;
-        playersOnline: number;
-        playersMax: number;
-        samplePlayers: string[];
-        motd: string;
-        tps: string;
-        updatedAt: string;
-      };
-    }
-  | null = null;
+type StatusPayload = {
+  ok: boolean;
+  online: boolean;
+  host: string;
+  ip: string;
+  port: number;
+  version: string;
+  playersOnline: number;
+  playersMax: number;
+  samplePlayers: string[];
+  motd: string;
+  tps: string;
+  updatedAt: string;
+};
 
 type MCSrvStatusResponse = {
   online?: boolean;
@@ -43,52 +37,27 @@ type MCSrvStatusResponse = {
   };
 };
 
-type PluginStatusResponse = {
-  ok?: boolean;
-  online?: boolean;
-  version?: string;
-  playersOnline?: number;
-  playersMax?: number;
-  samplePlayers?: string[];
-  motd?: string;
-  tps?: string;
-  updatedAt?: string;
-};
+let cachedStatus:
+  | {
+      timestamp: number;
+      payload: StatusPayload;
+    }
+  | null = null;
 
-async function fetchPluginStatus() {
-  if (!PLUGIN_URL) {
-    return null;
-  }
-
-  const response = await fetch(PLUGIN_URL, {
-    cache: "no-store",
-    signal: AbortSignal.timeout(1200),
-    headers: PLUGIN_TOKEN
-      ? {
-          Authorization: `Bearer ${PLUGIN_TOKEN}`,
-        }
-      : undefined,
-  });
-
-  if (!response.ok) {
-    throw new Error("plugin_unavailable");
-  }
-
-  const data = (await response.json()) as PluginStatusResponse;
-
+function fallbackPayload(): StatusPayload {
   return {
-    ok: Boolean(data.ok ?? true),
-    online: Boolean(data.online),
-    host: SERVER_HOST,
-    ip: SERVER_HOST,
+    ok: false,
+    online: false,
+    host: SERVER_ADDRESS,
+    ip: SERVER_IP,
     port: SERVER_PORT,
-    version: data.version ?? "1.21.11",
-    playersOnline: data.playersOnline ?? 0,
-    playersMax: data.playersMax ?? 0,
-    samplePlayers: data.samplePlayers ?? [],
-    motd: data.motd ?? "",
-    tps: data.tps ?? "--",
-    updatedAt: data.updatedAt ?? new Date().toISOString(),
+    version: "1.21.11",
+    playersOnline: 0,
+    playersMax: 0,
+    samplePlayers: [],
+    motd: "",
+    tps: "--",
+    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -104,40 +73,23 @@ export async function GET() {
   }
 
   try {
-    const pluginPayload = await fetchPluginStatus();
-
-    if (pluginPayload) {
-      cachedStatus = {
-        timestamp: Date.now(),
-        payload: pluginPayload,
-      };
-
-      return NextResponse.json(pluginPayload);
-    }
-  } catch {
-    // Fall back to the public status service.
-  }
-
-  try {
-    const response = await fetch(`https://api.mcsrvstat.us/3/${SERVER_HOST}`, {
+    const response = await fetch(`https://api.mcsrvstat.us/3/${SERVER_ADDRESS}`, {
       cache: "no-store",
       signal: AbortSignal.timeout(2500),
     });
 
     if (!response.ok) {
-      return NextResponse.json(
-        { ok: false, online: false, error: "upstream_failed" },
-        { status: 502 },
-      );
+      const payload = fallbackPayload();
+      cachedStatus = { timestamp: Date.now(), payload };
+      return NextResponse.json(payload);
     }
 
     const data = (await response.json()) as MCSrvStatusResponse;
-
-    const payload = {
+    const payload: StatusPayload = {
       ok: true,
       online: Boolean(data.online),
-      host: data.hostname ?? SERVER_HOST,
-      ip: data.ip ?? SERVER_HOST,
+      host: data.hostname ?? SERVER_ADDRESS,
+      ip: data.ip ?? SERVER_IP,
       port: data.port ?? SERVER_PORT,
       version: data.version ?? "1.21.11",
       playersOnline: data.players?.online ?? 0,
@@ -148,33 +100,11 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
     };
 
-    cachedStatus = {
-      timestamp: Date.now(),
-      payload,
-    };
-
+    cachedStatus = { timestamp: Date.now(), payload };
     return NextResponse.json(payload);
   } catch {
-    const payload = {
-      ok: false,
-      online: false,
-      host: SERVER_HOST,
-      ip: SERVER_HOST,
-      port: SERVER_PORT,
-      version: "1.21.11",
-      playersOnline: 0,
-      playersMax: 0,
-      samplePlayers: [],
-      motd: "",
-      tps: "--",
-      updatedAt: new Date().toISOString(),
-    };
-
-    cachedStatus = {
-      timestamp: Date.now(),
-      payload,
-    };
-
-    return NextResponse.json(payload, { status: 200 });
+    const payload = fallbackPayload();
+    cachedStatus = { timestamp: Date.now(), payload };
+    return NextResponse.json(payload);
   }
 }
