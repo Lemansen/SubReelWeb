@@ -330,8 +330,8 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
         return new StatusSnapshot(
             true,
             true,
-            "mc.subreel.online",
-            "mc.subreel.online",
+            "93.88.206.6:20633",
+            "93.88.206.6",
             Bukkit.getPort(),
             version,
             playersOnline,

@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
   const payload: SyncedStatusPayload = {
     ok: Boolean(body.ok ?? true),
     online: Boolean(body.online),
-    host: body.host ?? "mc.subreel.online",
-    ip: body.ip ?? "mc.subreel.online",
-    port: body.port ?? 25565,
+    host: body.host ?? "93.88.206.6:20633",
+    ip: body.ip ?? "93.88.206.6",
+    port: body.port ?? 20633,
     version: body.version ?? "1.21.11",
     playersOnline: body.playersOnline ?? 0,
     playersMax: body.playersMax ?? 0,

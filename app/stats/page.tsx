@@ -66,7 +66,7 @@ type WorldStats = {
   updatedAt: string;
 };
 
-const SERVER_IP = "mc.subreel.online";
+const SERVER_IP = "93.88.206.6:20633";
 
 export default function StatsPage() {
   const [lang, setLang] = useState<"RU" | "EN">("RU");

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { readSyncedStatus } from "@/lib/server-sync-store";
 
-const SERVER_HOST = "mc.subreel.online";
+const SERVER_HOST = "93.88.206.6:20633";
+const SERVER_PORT = 20633;
 const CACHE_TTL_MS = 60_000;
 const PLUGIN_URL = process.env.SERVER_STATUS_PLUGIN_URL;
 const PLUGIN_TOKEN = process.env.SERVER_STATUS_PLUGIN_TOKEN;
@@ -80,7 +81,7 @@ async function fetchPluginStatus() {
     online: Boolean(data.online),
     host: SERVER_HOST,
     ip: SERVER_HOST,
-    port: 25565,
+    port: SERVER_PORT,
     version: data.version ?? "1.21.11",
     playersOnline: data.playersOnline ?? 0,
     playersMax: data.playersMax ?? 0,
@@ -137,7 +138,7 @@ export async function GET() {
       online: Boolean(data.online),
       host: data.hostname ?? SERVER_HOST,
       ip: data.ip ?? SERVER_HOST,
-      port: data.port ?? 25565,
+      port: data.port ?? SERVER_PORT,
       version: data.version ?? "1.21.11",
       playersOnline: data.players?.online ?? 0,
       playersMax: data.players?.max ?? 0,
@@ -159,7 +160,7 @@ export async function GET() {
       online: false,
       host: SERVER_HOST,
       ip: SERVER_HOST,
-      port: 25565,
+      port: SERVER_PORT,
       version: "1.21.11",
       playersOnline: 0,
       playersMax: 0,
