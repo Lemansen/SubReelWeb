@@ -40,3 +40,6 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /data/auth-store.json
+/data/server-sync.json
+/subreel-status-plugin/.gradle/
+/subreel-status-plugin/build/

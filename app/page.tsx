@@ -131,6 +131,7 @@ export default function Home() {
               
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
+            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">

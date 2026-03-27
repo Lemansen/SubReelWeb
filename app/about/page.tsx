@@ -89,6 +89,7 @@ export default function AboutPage() {
               <div className="w-px h-4 bg-[var(--color-border-sharp)] opacity-50" />
               <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] transition-colors" />
             </div>
+            <ProfileEntry profileLabel="Профиль" loginLabel="Войти" pendingLabel="Профиль" />
           </div>
 
           <div className="md:hidden ml-auto flex items-center gap-2">
