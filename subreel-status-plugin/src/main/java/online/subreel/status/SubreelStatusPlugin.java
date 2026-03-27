@@ -14,6 +14,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -53,6 +54,7 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
     private File statsDataFile;
     private YamlConfiguration statsData;
     private final Map<UUID, Long> chatMessageCounts = new HashMap<>();
+    private final Map<UUID, Long> advancementCounts = new HashMap<>();
     private long totalChatMessages = 0;
     private int pendingChatWrites = 0;
     private boolean localHttpEnabled;
@@ -117,6 +119,19 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
         UUID playerId = event.getPlayer().getUniqueId();
         chatMessageCounts.merge(playerId, 1L, Long::sum);
         totalChatMessages += 1;
+        pendingChatWrites += 1;
+
+        if (pendingChatWrites >= 25) {
+            saveStatsData();
+            pendingChatWrites = 0;
+        }
+    }
+
+    @EventHandler
+    public void onPlayerAdvancementDone(PlayerAdvancementDoneEvent event) {
+        Player player = event.getPlayer();
+        long advancements = countCompletedAdvancementsLive(player);
+        advancementCounts.put(player.getUniqueId(), advancements);
         pendingChatWrites += 1;
 
         if (pendingChatWrites >= 25) {
@@ -199,6 +214,11 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
                     if (chatMessages > 0) {
                         chatMessageCounts.put(playerId, chatMessages);
                     }
+
+                    long advancements = statsData.getLong("players." + key + ".advancements", 0L);
+                    if (advancements > 0) {
+                        advancementCounts.put(playerId, advancements);
+                    }
                 } catch (IllegalArgumentException ignored) {
                     // Skip malformed UUIDs.
                 }
@@ -216,6 +236,10 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
 
         for (Map.Entry<UUID, Long> entry : chatMessageCounts.entrySet()) {
             statsData.set("players." + entry.getKey() + ".chatMessages", entry.getValue());
+        }
+
+        for (Map.Entry<UUID, Long> entry : advancementCounts.entrySet()) {
+            statsData.set("players." + entry.getKey() + ".advancements", entry.getValue());
         }
 
         try {
@@ -460,22 +484,73 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
 
     private long countCompletedAdvancements(OfflinePlayer offlinePlayer) {
         if (!offlinePlayer.isOnline()) {
-            return 0L;
+            return advancementCounts.getOrDefault(offlinePlayer.getUniqueId(), 0L);
         }
 
         Player player = offlinePlayer.getPlayer();
         if (player == null) {
-            return 0L;
+            return advancementCounts.getOrDefault(offlinePlayer.getUniqueId(), 0L);
         }
 
+        long count = countCompletedAdvancementsLive(player);
+        advancementCounts.put(player.getUniqueId(), count);
+        return count;
+    }
+
+    private long countCompletedAdvancementsLive(Player player) {
         long count = 0L;
         for (var iterator = Bukkit.advancementIterator(); iterator.hasNext(); ) {
             var advancement = iterator.next();
+            if (!shouldCountAdvancement(advancement)) {
+                continue;
+            }
+
             if (player.getAdvancementProgress(advancement).isDone()) {
                 count += 1;
             }
         }
         return count;
+    }
+
+    private boolean shouldCountAdvancement(org.bukkit.advancement.Advancement advancement) {
+        String key = advancement.getKey().getKey();
+        if (key.startsWith("recipes/")) {
+            return false;
+        }
+
+        try {
+            Method getParentMethod = advancement.getClass().getMethod("getParent");
+            Object parent = getParentMethod.invoke(advancement);
+            if (parent == null) {
+                return false;
+            }
+        } catch (NoSuchMethodException ignored) {
+            // Parent API is not available on all versions.
+        } catch (Exception ignored) {
+            return false;
+        }
+
+        try {
+            Method getDisplayMethod = advancement.getClass().getMethod("getDisplay");
+            Object display = getDisplayMethod.invoke(advancement);
+            if (display == null) {
+                return false;
+            }
+
+            try {
+                Method isHiddenMethod = display.getClass().getMethod("isHidden");
+                Object hidden = isHiddenMethod.invoke(display);
+                if (hidden instanceof Boolean hiddenValue && hiddenValue) {
+                    return false;
+                }
+            } catch (NoSuchMethodException ignored) {
+                // Hidden flag is not available on all API versions.
+            }
+
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     private String resolveTps() {

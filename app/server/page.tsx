@@ -517,7 +517,7 @@ export default function ServerPage() {
               <p className="text-[var(--color-text-gray)] font-medium text-lg mb-8 leading-relaxed">
                 {t.map_desc}
               </p>
-              <Link href="/wiki/map" className="inline-flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 hover:scale-105 active:scale-95 shadow-lg">
+              <Link href="http://mc.subreel.online:21168/" className="inline-flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 hover:scale-105 active:scale-95 shadow-lg">
                 <MapIcon size={20} strokeWidth={3} /> {t.map_btn}
               </Link>
             </div>
