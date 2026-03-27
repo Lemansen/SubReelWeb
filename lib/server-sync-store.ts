@@ -52,6 +52,11 @@ type ServerSyncStore = {
   worldStats: SyncedWorldStatsPayload | null;
 };
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __subreelServerSyncStore: ServerSyncStore | undefined;
+}
+
 const storeDir = path.join(process.cwd(), "data");
 const storePath = path.join(storeDir, "server-sync.json");
 
@@ -60,6 +65,14 @@ function emptyStore(): ServerSyncStore {
     status: null,
     worldStats: null,
   };
+}
+
+function getMemoryStore(): ServerSyncStore {
+  if (!globalThis.__subreelServerSyncStore) {
+    globalThis.__subreelServerSyncStore = emptyStore();
+  }
+
+  return globalThis.__subreelServerSyncStore;
 }
 
 async function ensureStore() {
@@ -73,24 +86,34 @@ async function ensureStore() {
 }
 
 async function readStore(): Promise<ServerSyncStore> {
-  await ensureStore();
+  const memoryStore = getMemoryStore();
 
   try {
+    await ensureStore();
     const raw = await readFile(storePath, "utf8");
     const parsed = JSON.parse(raw) as Partial<ServerSyncStore>;
 
-    return {
+    const store = {
       status: parsed.status ?? null,
       worldStats: parsed.worldStats ?? null,
     };
+
+    globalThis.__subreelServerSyncStore = store;
+    return store;
   } catch {
-    return emptyStore();
+    return memoryStore;
   }
 }
 
 async function writeStore(store: ServerSyncStore) {
-  await ensureStore();
-  await writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
+  globalThis.__subreelServerSyncStore = store;
+
+  try {
+    await ensureStore();
+    await writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
+  } catch {
+    // Ignore filesystem failures in restricted/serverless environments.
+  }
 }
 
 export async function readSyncedStatus() {
