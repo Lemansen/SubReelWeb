@@ -20,7 +20,7 @@ const content = {
     download_btn: "Скачать для",
     coming_soon: "Скоро для Вашей ОС",
     only_win: "В данный момент доступно только для Windows",
-    version_info: "Версия 0.1.2 • Тестирование",
+    version_info: "Версия 0.1.3 • Тестирование",
     hero_title_accent: "Лаунчер",
     download_unix: "Другие платформы",
 
@@ -79,7 +79,7 @@ const content = {
     download_btn: "Download for",
     coming_soon: "Soon for your OS",
     only_win: "Currently available only for Windows",
-    version_info: "Version 0.1.2 • Testing",
+    version_info: "Version 0.1.3 • Testing",
     hero_title_accent: "Launcher",
     download_unix: "Other platforms",
 
