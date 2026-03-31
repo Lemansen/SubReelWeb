@@ -10,11 +10,14 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerAdvancementDoneEvent;
+import org.bukkit.event.player.PlayerLoginEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -35,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -102,6 +106,8 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
         } else {
             getLogger().info("Push sync disabled. Set push.enabled=true and push.baseUrl to enable online sync to the website.");
         }
+
+        startBanCleanupTask();
     }
 
     @Override
@@ -138,6 +144,103 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
             saveStatsData();
             pendingChatWrites = 0;
         }
+    }
+
+    @EventHandler
+    public void onPlayerLogin(PlayerLoginEvent event) {
+        if (event.getResult() != PlayerLoginEvent.Result.KICK_BANNED) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        if (removePlayerProfile(player.getUniqueId())) {
+            saveStatsData();
+            getLogger().info("Removed stats profile for banned player on login check: " + player.getName() + " (" + player.getUniqueId() + ")");
+        }
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!command.getName().equalsIgnoreCase("subreelstats")) {
+            return false;
+        }
+
+        if (!sender.hasPermission("subreelstats.manage")) {
+            sender.sendMessage("§cNo permission.");
+            return true;
+        }
+
+        if (args.length == 0) {
+            sender.sendMessage("§7Usage: /subreelstats purge <nick|uuid> | /subreelstats purgebanned | /subreelstats merge <from> <to>");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("purgebanned")) {
+            int removed = purgeBannedProfiles();
+            sender.sendMessage("§aPurged banned profiles: §f" + removed);
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("purge")) {
+            if (args.length < 2) {
+                sender.sendMessage("§cUsage: /subreelstats purge <nick|uuid>");
+                return true;
+            }
+
+            UUID targetId = resolvePlayerUuid(args[1]);
+            if (targetId == null) {
+                sender.sendMessage("§cPlayer not found by nick/uuid.");
+                return true;
+            }
+
+            if (removePlayerProfile(targetId)) {
+                saveStatsData();
+                sender.sendMessage("§aProfile removed: §f" + targetId);
+            } else {
+                sender.sendMessage("§eProfile not found in stats: §f" + targetId);
+            }
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("merge")) {
+            if (args.length < 3) {
+                sender.sendMessage("§cUsage: /subreelstats merge <from> <to>");
+                return true;
+            }
+
+            UUID fromId = resolvePlayerUuid(args[1]);
+            UUID toId = resolvePlayerUuid(args[2]);
+
+            if (fromId == null || toId == null) {
+                sender.sendMessage("§cPlayer not found by nick/uuid.");
+                return true;
+            }
+
+            if (fromId.equals(toId)) {
+                sender.sendMessage("§eCannot merge the same profile into itself.");
+                return true;
+            }
+
+            if (mergePlayerProfiles(fromId, toId)) {
+                saveStatsData();
+                sender.sendMessage("§aMerged profile: §f" + fromId + " §7-> §f" + toId);
+            } else {
+                sender.sendMessage("§eNothing to merge. Source profile was not found.");
+            }
+            return true;
+        }
+
+        sender.sendMessage("§7Usage: /subreelstats purge <nick|uuid> | /subreelstats purgebanned | /subreelstats merge <from> <to>");
+        return true;
+    }
+
+    private void startBanCleanupTask() {
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            int removed = purgeBannedProfiles();
+            if (removed > 0) {
+                getLogger().info("Auto-purged banned profiles: " + removed);
+            }
+        }, 20L * 60L, 20L * 60L);
     }
 
     private void startLocalHttpBridge() {
@@ -264,6 +367,92 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
         return value.endsWith("/") ? value.substring(0, value.length() - 1) : value;
     }
 
+    private UUID resolvePlayerUuid(String input) {
+        try {
+            return UUID.fromString(input);
+        } catch (IllegalArgumentException ignored) {
+            // Not a UUID, try name lookup.
+        }
+
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            String name = offlinePlayer.getName();
+            if (name != null && name.equalsIgnoreCase(input)) {
+                return offlinePlayer.getUniqueId();
+            }
+        }
+
+        return null;
+    }
+
+    private int purgeBannedProfiles() {
+        int removed = 0;
+        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (!offlinePlayer.isBanned()) {
+                continue;
+            }
+
+            if (removePlayerProfile(offlinePlayer.getUniqueId())) {
+                removed += 1;
+            }
+        }
+
+        if (removed > 0) {
+            saveStatsData();
+        }
+
+        return removed;
+    }
+
+    private boolean removePlayerProfile(UUID playerId) {
+        Objects.requireNonNull(playerId, "playerId");
+
+        long removedChatMessages = chatMessageCounts.remove(playerId) != null
+            ? statsData.getLong("players." + playerId + ".chatMessages", 0L)
+            : 0L;
+        boolean removedAdvancements = advancementCounts.remove(playerId) != null;
+        statsData.set("players." + playerId, null);
+
+        if (removedChatMessages > 0) {
+            totalChatMessages = Math.max(0L, totalChatMessages - removedChatMessages);
+            statsData.set("totals.chatMessages", totalChatMessages);
+        }
+
+        return removedChatMessages > 0 || removedAdvancements;
+    }
+
+    private boolean mergePlayerProfiles(UUID fromPlayerId, UUID toPlayerId) {
+        Objects.requireNonNull(fromPlayerId, "fromPlayerId");
+        Objects.requireNonNull(toPlayerId, "toPlayerId");
+
+        var playersSection = statsData.getConfigurationSection("players");
+        long fromChatMessages = chatMessageCounts.getOrDefault(fromPlayerId, 0L);
+        long toChatMessages = chatMessageCounts.getOrDefault(toPlayerId, 0L);
+        long fromAdvancements = advancementCounts.getOrDefault(fromPlayerId, 0L);
+        long toAdvancements = advancementCounts.getOrDefault(toPlayerId, 0L);
+
+        boolean hasSourceProfile = fromChatMessages > 0
+            || fromAdvancements > 0
+            || playersSection != null && playersSection.contains(fromPlayerId.toString());
+
+        if (!hasSourceProfile) {
+            return false;
+        }
+
+        if (fromChatMessages > 0 || toChatMessages > 0) {
+            chatMessageCounts.put(toPlayerId, fromChatMessages + toChatMessages);
+        }
+
+        if (fromAdvancements > 0 || toAdvancements > 0) {
+            advancementCounts.put(toPlayerId, Math.max(fromAdvancements, toAdvancements));
+        }
+
+        chatMessageCounts.remove(fromPlayerId);
+        advancementCounts.remove(fromPlayerId);
+        statsData.set("players." + fromPlayerId, null);
+
+        return true;
+    }
+
     private boolean isAuthorized(Headers headers) {
         if (configuredToken == null || configuredToken.isBlank()) {
             return true;
@@ -372,6 +561,11 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
         List<PlayerStatsEntry> leaderboard = new ArrayList<>();
 
         for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+            if (offlinePlayer.isBanned()) {
+                removePlayerProfile(offlinePlayer.getUniqueId());
+                continue;
+            }
+
             String name = offlinePlayer.getName();
             if (name == null || name.isBlank()) {
                 continue;
@@ -744,3 +938,4 @@ public final class SubreelStatusPlugin extends JavaPlugin implements Listener {
             .replace("\n", "\\n");
     }
 }
+
