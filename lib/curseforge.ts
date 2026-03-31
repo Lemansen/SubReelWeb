@@ -1,14 +1,23 @@
-const CURSEFORGE_API_BASE = "https://api.curseforge.com/v1";
+const CURSEFORGE_UPLOAD_API_BASE =
+  process.env.CURSEFORGE_API_BASE ?? "https://minecraft.curseforge.com/api";
 
 type QueryValue = string | number | boolean | null | undefined;
 
-function getApiKey(): string {
-  const apiKey = process.env.CURSEFORGE_API_KEY;
-  if (!apiKey) {
-    throw new Error("CURSEFORGE_API_KEY is not configured");
+type CurseForgeProxyError = Error & {
+  status?: number;
+  payload?: unknown;
+  rawText?: string;
+};
+
+function getApiToken(): string {
+  const apiToken =
+    process.env.CURSEFORGE_API_TOKEN ?? process.env.CURSEFORGE_API_KEY;
+
+  if (!apiToken) {
+    throw new Error("CURSEFORGE_API_TOKEN is not configured");
   }
 
-  return apiKey;
+  return apiToken;
 }
 
 function buildQuery(params: Record<string, QueryValue>): string {
@@ -25,46 +34,78 @@ function buildQuery(params: Record<string, QueryValue>): string {
   return searchParams.toString();
 }
 
-export async function curseforgeFetch<T>(
+function tryParseJson(text: string): unknown {
+  if (!text.trim()) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+export async function curseforgeUploadFetch<T>(
   path: string,
   params?: Record<string, QueryValue>,
 ): Promise<T> {
   const query = params ? buildQuery(params) : "";
-  const url = `${CURSEFORGE_API_BASE}${path}${query ? `?${query}` : ""}`;
+  const url = `${CURSEFORGE_UPLOAD_API_BASE}${path}${query ? `?${query}` : ""}`;
 
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      "x-api-key": getApiKey(),
-      Accept: "application/json",
+      "X-Api-Token": getApiToken(),
+      Accept: "application/json, text/plain;q=0.9, */*;q=0.8",
     },
     cache: "no-store",
     signal: AbortSignal.timeout(15_000),
   });
 
-  const text = await response.text();
-  const payload = text ? (JSON.parse(text) as T) : ({} as T);
+  const rawText = await response.text();
+  const payload = tryParseJson(rawText);
 
   if (!response.ok) {
-    const error = new Error(`CurseForge request failed with status ${response.status}`);
-    (error as Error & { payload?: unknown }).payload = payload;
+    const error = new Error(
+      `CurseForge request failed with status ${response.status}`,
+    ) as CurseForgeProxyError;
+    error.status = response.status;
+    error.payload = payload;
+    error.rawText = rawText;
     throw error;
   }
 
-  return payload;
-}
-
-export function getRequiredNumberParam(
-  request: Request,
-  name: string,
-): number | null {
-  const value = new URL(request.url).searchParams.get(name);
-  if (!value) {
-    return null;
+  if (payload === null) {
+    const error = new Error(
+      "CurseForge returned a non-JSON response",
+    ) as CurseForgeProxyError;
+    error.status = response.status;
+    error.rawText = rawText;
+    throw error;
   }
 
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+  return payload as T;
+}
+
+export function buildCurseForgeErrorResponse(error: unknown) {
+  const fallbackMessage = "Unknown CurseForge proxy error";
+
+  if (!(error instanceof Error)) {
+    return {
+      ok: false,
+      error: fallbackMessage,
+    };
+  }
+
+  const proxyError = error as CurseForgeProxyError;
+  return {
+    ok: false,
+    error: proxyError.message,
+    status: proxyError.status ?? 500,
+    rawText: proxyError.rawText?.slice(0, 500) ?? null,
+    payload: proxyError.payload ?? null,
+  };
 }
 
 export function getOptionalNumberParam(

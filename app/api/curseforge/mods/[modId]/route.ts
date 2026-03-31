@@ -1,39 +1,12 @@
 import { NextResponse } from "next/server";
-import { curseforgeFetch } from "@/lib/curseforge";
 
-type RouteContext = {
-  params: Promise<{
-    modId: string;
-  }>;
-};
-
-export async function GET(_: Request, context: RouteContext) {
-  const { modId } = await context.params;
-  const numericId = Number(modId);
-
-  if (!Number.isFinite(numericId)) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "Invalid modId",
-      },
-      { status: 400 },
-    );
-  }
-
-  try {
-    const data = await curseforgeFetch(`/mods/${numericId}`);
-    return NextResponse.json(data);
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Unknown CurseForge proxy error";
-
-    return NextResponse.json(
-      {
-        ok: false,
-        error: message,
-      },
-      { status: 500 },
-    );
-  }
+export async function GET() {
+  return NextResponse.json(
+    {
+      ok: false,
+      error:
+        "This endpoint is disabled. The official CurseForge Upload API token from the support article does not provide this public mod details route in the same format.",
+    },
+    { status: 501 },
+  );
 }
