@@ -7,6 +7,7 @@ type CurseForgeProxyError = Error & {
   status?: number;
   payload?: unknown;
   rawText?: string;
+  url?: string;
 };
 
 function getApiKey(): string {
@@ -67,21 +68,35 @@ export async function curseforgeFetch<T>(
   const payload = tryParseJson(rawText);
 
   if (!response.ok) {
+    console.error("[curseforge-proxy] request failed", {
+      url,
+      status: response.status,
+      rawText: rawText.slice(0, 500),
+    });
+
     const error = new Error(
       `CurseForge request failed with status ${response.status}`,
     ) as CurseForgeProxyError;
     error.status = response.status;
     error.payload = payload;
     error.rawText = rawText;
+    error.url = url;
     throw error;
   }
 
   if (payload === null) {
+    console.error("[curseforge-proxy] non-json response", {
+      url,
+      status: response.status,
+      rawText: rawText.slice(0, 500),
+    });
+
     const error = new Error(
       "CurseForge returned a non-JSON response",
     ) as CurseForgeProxyError;
     error.status = response.status;
     error.rawText = rawText;
+    error.url = url;
     throw error;
   }
 
@@ -103,6 +118,7 @@ export function buildCurseForgeErrorResponse(error: unknown) {
     ok: false,
     error: proxyError.message,
     status: proxyError.status ?? 500,
+    url: proxyError.url ?? null,
     rawText: proxyError.rawText?.slice(0, 500) ?? null,
     payload: proxyError.payload ?? null,
   };
