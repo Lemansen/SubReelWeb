@@ -1,5 +1,5 @@
-const CURSEFORGE_UPLOAD_API_BASE =
-  process.env.CURSEFORGE_API_BASE ?? "https://minecraft.curseforge.com/api";
+const CURSEFORGE_API_BASE =
+  process.env.CURSEFORGE_API_BASE ?? "https://api.curseforge.com/v1";
 
 type QueryValue = string | number | boolean | null | undefined;
 
@@ -9,15 +9,15 @@ type CurseForgeProxyError = Error & {
   rawText?: string;
 };
 
-function getApiToken(): string {
-  const apiToken =
-    process.env.CURSEFORGE_API_TOKEN ?? process.env.CURSEFORGE_API_KEY;
+function getApiKey(): string {
+  const apiKey =
+    process.env.CURSEFORGE_API_KEY ?? process.env.CURSEFORGE_API_TOKEN;
 
-  if (!apiToken) {
-    throw new Error("CURSEFORGE_API_TOKEN is not configured");
+  if (!apiKey) {
+    throw new Error("CURSEFORGE_API_KEY is not configured");
   }
 
-  return apiToken;
+  return apiKey;
 }
 
 function buildQuery(params: Record<string, QueryValue>): string {
@@ -46,17 +46,17 @@ function tryParseJson(text: string): unknown {
   }
 }
 
-export async function curseforgeUploadFetch<T>(
+export async function curseforgeFetch<T>(
   path: string,
   params?: Record<string, QueryValue>,
 ): Promise<T> {
   const query = params ? buildQuery(params) : "";
-  const url = `${CURSEFORGE_UPLOAD_API_BASE}${path}${query ? `?${query}` : ""}`;
+  const url = `${CURSEFORGE_API_BASE}${path}${query ? `?${query}` : ""}`;
 
   const response = await fetch(url, {
     method: "GET",
     headers: {
-      "X-Api-Token": getApiToken(),
+      "x-api-key": getApiKey(),
       Accept: "application/json, text/plain;q=0.9, */*;q=0.8",
     },
     cache: "no-store",

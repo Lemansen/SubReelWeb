@@ -1,61 +1,61 @@
 # CurseForge Proxy for Vercel
 
-This proxy is now aligned with the official CurseForge support article for the Upload API:
+This site now proxies the official CurseForge REST API through Vercel server routes.
 
-- it uses the `X-Api-Token` header
-- it reads the token from Vercel Environment Variables
-- it returns safe JSON diagnostics even when CurseForge answers with plain text like `Forbidden`
+## Security
 
-## Vercel setup
+Store the real key only in Vercel Environment Variables:
 
-Add one of these Environment Variables:
+- `CURSEFORGE_API_KEY`
+
+Optional fallback names:
 
 - `CURSEFORGE_API_TOKEN`
-- or keep using `CURSEFORGE_API_KEY` as a fallback name
-
-Optional override:
-
 - `CURSEFORGE_API_BASE`
 
-Default base:
+Default API base:
 
-- `https://minecraft.curseforge.com/api`
+- `https://api.curseforge.com/v1`
 
-## Available proxy routes
+The proxy uses the `x-api-key` header server-side, so the launcher never exposes the real key.
 
-Official-style routes:
-
-- `GET /api/curseforge/game/versions`
-- `GET /api/curseforge/game/version-types`
-- `GET /api/curseforge/game/dependencies`
-
-Legacy mod-browser routes:
+## Available routes
 
 - `GET /api/curseforge/mods/search`
 - `GET /api/curseforge/mods/:modId`
 - `GET /api/curseforge/mods/:modId/files`
+- `GET /api/curseforge/games/minecraft/versions`
+- `GET /api/curseforge/games/minecraft/version-types`
 
-Those legacy mod routes are intentionally disabled with `501`, because the official Upload API token from the support article is not the same thing as the public mod search API flow.
-
-## Why this matters
-
-The support article you linked describes the official author-side CurseForge API. It is useful for authenticated service access, but it should not be confused with the old public-style `mods/search` flow.
-
-Because of that, the proxy now does two things:
-
-1. Uses the correct auth header and server-only token handling.
-2. Returns honest JSON errors instead of pretending public mod search is already working through this token.
-
-## Example checks
+## Example requests
 
 ```text
-/api/curseforge/game/versions
+/api/curseforge/mods/search?searchFilter=sodium&gameVersion=1.21.1&modLoaderType=4&pageSize=20
 ```
 
 ```text
-/api/curseforge/game/version-types
+/api/curseforge/mods/394468
 ```
 
 ```text
-/api/curseforge/game/dependencies
+/api/curseforge/mods/394468/files?gameVersion=1.21.1&modLoaderType=4&pageSize=20
 ```
+
+```text
+/api/curseforge/games/minecraft/versions
+```
+
+## Diagnostics
+
+If CurseForge returns plain text like `Forbidden`, the proxy now wraps it in JSON:
+
+```json
+{
+  "ok": false,
+  "error": "CurseForge request failed with status 403",
+  "status": 403,
+  "rawText": "Forbidden: ..."
+}
+```
+
+That makes launcher-side debugging much easier.
