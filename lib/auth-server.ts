@@ -1,6 +1,9 @@
+import "server-only";
+
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import * as postgresAuth from "./auth-postgres";
 
 export type StoredUser = {
   id: string;
@@ -27,6 +30,20 @@ type AuthStore = {
   sessions: SessionRecord[];
 };
 
+type UserRow = {
+  id: string;
+  login: string;
+  email: string;
+  nickname: string;
+  password_hash: string;
+  role: "player";
+  launcher_token: string;
+  launcher_token_updated_at: string;
+  microsoft_connected: number;
+  created_at: string;
+  last_login_at: string;
+};
+
 export type PublicUser = Pick<
   StoredUser,
   | "id"
@@ -45,6 +62,13 @@ export type LauncherAuthUser = Pick<
   StoredUser,
   "id" | "login" | "nickname" | "role" | "launcherToken" | "microsoftConnected" | "lastLoginAt"
 >;
+
+export type DirectoryUser = Pick<
+  StoredUser,
+  "id" | "login" | "nickname" | "role" | "createdAt" | "lastLoginAt" | "microsoftConnected"
+> & {
+  isCurrentUser: boolean;
+};
 
 type RegisterInput = {
   login: string;
@@ -77,42 +101,213 @@ type UpdatePasswordInput = {
   nextPassword: string;
 };
 
-const storeDir = path.join(process.cwd(), "data");
-const storePath = path.join(storeDir, "auth-store.json");
-
-function emptyStore(): AuthStore {
-  return { users: [], sessions: [] };
+function shouldUsePostgres() {
+  return postgresAuth.isPostgresConfigured();
 }
 
-async function ensureStore() {
-  await mkdir(storeDir, { recursive: true });
+const workspaceRoot = resolveWorkspaceRoot();
+const databaseDir = path.join(workspaceRoot, "SubReelSql");
+const databasePath = path.join(databaseDir, "subreel-auth.sqlite");
+const legacyStorePath = path.join(workspaceRoot, "subreelsite", "data", "auth-store.json");
+const userSelectColumns = `
+  id,
+  login,
+  email,
+  nickname,
+  password_hash,
+  role,
+  launcher_token,
+  launcher_token_updated_at,
+  microsoft_connected,
+  created_at,
+  last_login_at
+`;
+
+const authDatabaseGlobal = globalThis as typeof globalThis & {
+  __subreelAuthDatabase?: { exec(sql: string): void; prepare(sql: string): { get(params?: Record<string, unknown>): unknown; all(params?: Record<string, unknown>): unknown[]; run(params?: Record<string, unknown>): unknown } };
+  __subreelAuthDatabaseInitialized?: boolean;
+};
+
+function resolveWorkspaceRoot() {
+  const currentDirectory = process.cwd();
+  return path.basename(currentDirectory).toLowerCase() === "subreelsite"
+    ? path.dirname(currentDirectory)
+    : currentDirectory;
+}
+
+function getDatabase() {
+  mkdirSync(databaseDir, { recursive: true });
+
+  if (!authDatabaseGlobal.__subreelAuthDatabase) {
+    const { DatabaseSync } = require("node:sqlite") as typeof import("node:sqlite");
+    authDatabaseGlobal.__subreelAuthDatabase = new DatabaseSync(databasePath, {
+      enableForeignKeyConstraints: true,
+    });
+  }
+
+  const database = authDatabaseGlobal.__subreelAuthDatabase;
+
+  if (!authDatabaseGlobal.__subreelAuthDatabaseInitialized) {
+    initializeDatabase(database);
+    authDatabaseGlobal.__subreelAuthDatabaseInitialized = true;
+  }
+
+  return database;
+}
+
+export function isUserDirectoryEnabled() {
+  return process.env.NODE_ENV !== "production" || process.env.SUBREEL_ENABLE_USER_DIRECTORY === "1";
+}
+
+function initializeDatabase(database: { exec(sql: string): void; prepare(sql: string): { get(params?: Record<string, unknown>): unknown; all(params?: Record<string, unknown>): unknown[]; run(params?: Record<string, unknown>): unknown } }) {
+  database.exec(`
+    PRAGMA busy_timeout = 5000;
+    PRAGMA journal_mode = WAL;
+
+    CREATE TABLE IF NOT EXISTS users (
+      id TEXT PRIMARY KEY,
+      login TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      email TEXT NOT NULL COLLATE NOCASE UNIQUE,
+      nickname TEXT NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT 'player' CHECK (role = 'player'),
+      launcher_token TEXT NOT NULL UNIQUE,
+      launcher_token_updated_at TEXT NOT NULL,
+      microsoft_connected INTEGER NOT NULL DEFAULT 0 CHECK (microsoft_connected IN (0, 1)),
+      created_at TEXT NOT NULL,
+      last_login_at TEXT NOT NULL
+    ) STRICT;
+
+    CREATE TABLE IF NOT EXISTS sessions (
+      token TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    ) STRICT;
+
+    CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
+  `);
+
+  migrateLegacyStore(database);
+}
+
+function migrateLegacyStore(database: { exec(sql: string): void; prepare(sql: string): { get(params?: Record<string, unknown>): unknown; all(params?: Record<string, unknown>): unknown[]; run(params?: Record<string, unknown>): unknown } }) {
+  const countRow = database.prepare("SELECT COUNT(*) AS count FROM users").get() as
+    | { count?: number | bigint }
+    | undefined;
+  const userCount = Number(countRow?.count ?? 0);
+
+  if (userCount > 0 || !existsSync(legacyStorePath)) {
+    return;
+  }
+
+  let legacyStore: Partial<AuthStore>;
 
   try {
-    await readFile(storePath, "utf8");
+    legacyStore = JSON.parse(readFileSync(legacyStorePath, "utf8")) as Partial<AuthStore>;
   } catch {
-    await writeFile(storePath, JSON.stringify(emptyStore(), null, 2), "utf8");
+    return;
   }
+
+  const legacyUsers = Array.isArray(legacyStore.users) ? legacyStore.users : [];
+  const legacySessions = Array.isArray(legacyStore.sessions) ? legacyStore.sessions : [];
+
+  if (legacyUsers.length === 0) {
+    return;
+  }
+
+  const insertUser = database.prepare(`
+    INSERT OR IGNORE INTO users (
+      id,
+      login,
+      email,
+      nickname,
+      password_hash,
+      role,
+      launcher_token,
+      launcher_token_updated_at,
+      microsoft_connected,
+      created_at,
+      last_login_at
+    ) VALUES (
+      :id,
+      :login,
+      :email,
+      :nickname,
+      :passwordHash,
+      :role,
+      :launcherToken,
+      :launcherTokenUpdatedAt,
+      :microsoftConnected,
+      :createdAt,
+      :lastLoginAt
+    )
+  `);
+
+  const insertSession = database.prepare(`
+    INSERT OR IGNORE INTO sessions (token, user_id, created_at)
+    VALUES (:token, :userId, :createdAt)
+  `);
+
+  runInTransaction(database, () => {
+    for (const legacyUser of legacyUsers) {
+      const userId = normalizeValue(legacyUser.id) || makeUserId();
+      const login = normalizeValue(legacyUser.login) || normalizeValue(legacyUser.nickname) || `player_${userId.slice(0, 8)}`;
+      const email = normalizeEmail(legacyUser.email) || `${userId}@local.subreel`;
+      const now = new Date().toISOString();
+
+      insertUser.run({
+        id: userId,
+        login,
+        email,
+        nickname: normalizeValue(legacyUser.nickname) || login,
+        passwordHash: normalizeValue(legacyUser.passwordHash) || hashPassword(createSessionToken()),
+        role: "player",
+        launcherToken: normalizeValue(legacyUser.launcherToken) || createSessionToken(),
+        launcherTokenUpdatedAt: normalizeValue(legacyUser.launcherTokenUpdatedAt) || now,
+        microsoftConnected: legacyUser.microsoftConnected ? 1 : 0,
+        createdAt: normalizeValue(legacyUser.createdAt) || now,
+        lastLoginAt: normalizeValue(legacyUser.lastLoginAt) || now,
+      });
+    }
+
+    for (const legacySession of legacySessions) {
+      const token = normalizeValue(legacySession.token);
+      const userId = normalizeValue(legacySession.userId);
+      const createdAt = normalizeValue(legacySession.createdAt) || new Date().toISOString();
+
+      if (!token || !userId) {
+        continue;
+      }
+
+      insertSession.run({
+        token,
+        userId,
+        createdAt,
+      });
+    }
+  });
 }
 
-async function readStore(): Promise<AuthStore> {
-  await ensureStore();
+function normalizeValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function normalizeEmail(value: unknown) {
+  return normalizeValue(value).toLowerCase();
+}
+
+function runInTransaction<T>(database: { exec(sql: string): void }, action: () => T) {
+  database.exec("BEGIN IMMEDIATE");
 
   try {
-    const raw = await readFile(storePath, "utf8");
-    const parsed = JSON.parse(raw) as Partial<AuthStore>;
-
-    return {
-      users: Array.isArray(parsed.users) ? parsed.users : [],
-      sessions: Array.isArray(parsed.sessions) ? parsed.sessions : [],
-    };
-  } catch {
-    return emptyStore();
+    const result = action();
+    database.exec("COMMIT");
+    return result;
+  } catch (error) {
+    database.exec("ROLLBACK");
+    throw error;
   }
-}
-
-async function writeStore(store: AuthStore) {
-  await ensureStore();
-  await writeFile(storePath, JSON.stringify(store, null, 2), "utf8");
 }
 
 function hashPassword(password: string) {
@@ -136,6 +331,26 @@ function verifyPassword(password: string, storedHash: string) {
   }
 
   return timingSafeEqual(derived, original);
+}
+
+function mapStoredUser(row: UserRow | null | undefined): StoredUser | null {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    login: row.login,
+    email: row.email,
+    nickname: row.nickname,
+    passwordHash: row.password_hash,
+    role: "player",
+    launcherToken: row.launcher_token,
+    launcherTokenUpdatedAt: row.launcher_token_updated_at,
+    microsoftConnected: Boolean(row.microsoft_connected),
+    createdAt: row.created_at,
+    lastLoginAt: row.last_login_at,
+  };
 }
 
 function toPublicUser(user: StoredUser): PublicUser {
@@ -165,6 +380,19 @@ function toLauncherAuthUser(user: StoredUser): LauncherAuthUser {
   };
 }
 
+function toDirectoryUser(user: StoredUser, currentUserId: string): DirectoryUser {
+  return {
+    id: user.id,
+    login: user.login,
+    nickname: user.nickname,
+    role: user.role,
+    createdAt: user.createdAt,
+    lastLoginAt: user.lastLoginAt,
+    microsoftConnected: user.microsoftConnected,
+    isCurrentUser: user.id === currentUserId,
+  };
+}
+
 function createSessionToken() {
   return randomBytes(32).toString("hex");
 }
@@ -173,21 +401,59 @@ function makeUserId() {
   return randomBytes(12).toString("hex");
 }
 
-function findUserBySession(store: AuthStore, sessionToken: string | undefined) {
+function isUniqueConstraintError(error: unknown) {
+  return error instanceof Error && error.message.includes("UNIQUE constraint failed");
+}
+
+function findUserBySession(database: { prepare(sql: string): { get(params?: Record<string, unknown>): unknown } }, sessionToken: string | undefined) {
   if (!sessionToken) {
     return null;
   }
 
-  const session = store.sessions.find((entry) => entry.token === sessionToken);
+  const row = database
+    .prepare(`
+      SELECT ${userSelectColumns}
+      FROM sessions
+      INNER JOIN users ON users.id = sessions.user_id
+      WHERE sessions.token = :token
+      LIMIT 1
+    `)
+    .get({ token: sessionToken }) as UserRow | undefined;
 
-  if (!session) {
+  return mapStoredUser(row);
+}
+
+function findUserByIdentifier(database: { prepare(sql: string): { get(params?: Record<string, unknown>): unknown } }, identifier: string) {
+  const row = database
+    .prepare(`
+      SELECT ${userSelectColumns}
+      FROM users
+      WHERE login = :identifier OR email = :identifier
+      LIMIT 1
+    `)
+    .get({ identifier }) as UserRow | undefined;
+
+  return mapStoredUser(row);
+}
+
+function findUserByLauncherToken(database: { prepare(sql: string): { get(params?: Record<string, unknown>): unknown } }, launcherToken: string | undefined) {
+  if (!launcherToken) {
     return null;
   }
 
-  return store.users.find((entry) => entry.id === session.userId) ?? null;
+  const row = database
+    .prepare(`
+      SELECT ${userSelectColumns}
+      FROM users
+      WHERE launcher_token = :launcherToken
+      LIMIT 1
+    `)
+    .get({ launcherToken }) as UserRow | undefined;
+
+  return mapStoredUser(row);
 }
 
-export async function registerUser(input: RegisterInput): Promise<RegisterResult> {
+async function sqliteRegisterUser(input: RegisterInput): Promise<RegisterResult> {
   const login = input.login.trim();
   const email = input.email.trim().toLowerCase();
   const nickname = input.nickname.trim();
@@ -201,15 +467,22 @@ export async function registerUser(input: RegisterInput): Promise<RegisterResult
     return { ok: false, error: "password" };
   }
 
-  const store = await readStore();
-  const exists = store.users.some(
-    (user) => user.login.toLowerCase() === login.toLowerCase() || user.email.toLowerCase() === email,
-  );
+  const database = getDatabase();
+  const exists = database
+    .prepare(`
+      SELECT 1 AS found
+      FROM users
+      WHERE login = :login OR email = :email
+      LIMIT 1
+    `)
+    .get({ login, email }) as { found?: number } | undefined;
 
-  if (exists) {
+  if (exists?.found) {
     return { ok: false, error: "exists" };
   }
 
+  const now = new Date().toISOString();
+  const sessionToken = createSessionToken();
   const user: StoredUser = {
     id: makeUserId(),
     login,
@@ -218,25 +491,79 @@ export async function registerUser(input: RegisterInput): Promise<RegisterResult
     passwordHash: hashPassword(password),
     role: "player",
     launcherToken: createSessionToken(),
-    launcherTokenUpdatedAt: new Date().toISOString(),
+    launcherTokenUpdatedAt: now,
     microsoftConnected: false,
-    createdAt: new Date().toISOString(),
-    lastLoginAt: new Date().toISOString(),
+    createdAt: now,
+    lastLoginAt: now,
   };
 
-  const sessionToken = createSessionToken();
-  store.users.push(user);
-  store.sessions.push({
-    token: sessionToken,
-    userId: user.id,
-    createdAt: new Date().toISOString(),
-  });
-  await writeStore(store);
+  try {
+    runInTransaction(database, () => {
+      database
+        .prepare(`
+          INSERT INTO users (
+            id,
+            login,
+            email,
+            nickname,
+            password_hash,
+            role,
+            launcher_token,
+            launcher_token_updated_at,
+            microsoft_connected,
+            created_at,
+            last_login_at
+          ) VALUES (
+            :id,
+            :login,
+            :email,
+            :nickname,
+            :passwordHash,
+            :role,
+            :launcherToken,
+            :launcherTokenUpdatedAt,
+            :microsoftConnected,
+            :createdAt,
+            :lastLoginAt
+          )
+        `)
+        .run({
+          id: user.id,
+          login: user.login,
+          email: user.email,
+          nickname: user.nickname,
+          passwordHash: user.passwordHash,
+          role: user.role,
+          launcherToken: user.launcherToken,
+          launcherTokenUpdatedAt: user.launcherTokenUpdatedAt,
+          microsoftConnected: user.microsoftConnected ? 1 : 0,
+          createdAt: user.createdAt,
+          lastLoginAt: user.lastLoginAt,
+        });
+
+      database
+        .prepare(`
+          INSERT INTO sessions (token, user_id, created_at)
+          VALUES (:token, :userId, :createdAt)
+        `)
+        .run({
+          token: sessionToken,
+          userId: user.id,
+          createdAt: now,
+        });
+    });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return { ok: false, error: "exists" };
+    }
+
+    throw error;
+  }
 
   return { ok: true, user: toPublicUser(user), sessionToken };
 }
 
-export async function loginUser(input: LoginInput): Promise<LoginResult> {
+async function sqliteLoginUser(input: LoginInput): Promise<LoginResult> {
   const identifier = input.identifier.trim().toLowerCase();
   const password = input.password;
 
@@ -244,71 +571,105 @@ export async function loginUser(input: LoginInput): Promise<LoginResult> {
     return { ok: false, error: "fill" };
   }
 
-  const store = await readStore();
-  const user =
-    store.users.find(
-      (entry) => entry.login.toLowerCase() === identifier || entry.email.toLowerCase() === identifier,
-    ) ?? null;
+  const database = getDatabase();
+  const user = findUserByIdentifier(database, identifier);
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return { ok: false, error: "invalid" };
   }
 
-  user.lastLoginAt = new Date().toISOString();
   const sessionToken = createSessionToken();
-  store.sessions = store.sessions.filter((session) => session.userId !== user.id);
-  store.sessions.push({
-    token: sessionToken,
-    userId: user.id,
-    createdAt: new Date().toISOString(),
-  });
-  await writeStore(store);
+  const now = new Date().toISOString();
 
+  runInTransaction(database, () => {
+    database
+      .prepare(`
+        UPDATE users
+        SET last_login_at = :lastLoginAt
+        WHERE id = :id
+      `)
+      .run({
+        id: user.id,
+        lastLoginAt: now,
+      });
+
+    database
+      .prepare(`
+        DELETE FROM sessions
+        WHERE user_id = :userId
+      `)
+      .run({ userId: user.id });
+
+    database
+      .prepare(`
+        INSERT INTO sessions (token, user_id, created_at)
+        VALUES (:token, :userId, :createdAt)
+      `)
+      .run({
+        token: sessionToken,
+        userId: user.id,
+        createdAt: now,
+      });
+  });
+
+  user.lastLoginAt = now;
   return { ok: true, user: toPublicUser(user), sessionToken };
 }
 
-export async function getUserBySession(sessionToken: string | undefined): Promise<PublicUser | null> {
+async function sqliteGetUserBySession(sessionToken: string | undefined): Promise<PublicUser | null> {
   if (!sessionToken) {
     return null;
   }
 
-  const store = await readStore();
-  const user = findUserBySession(store, sessionToken);
+  const database = getDatabase();
+  const user = findUserBySession(database, sessionToken);
   return user ? toPublicUser(user) : null;
 }
 
-export async function clearSession(sessionToken: string | undefined) {
+async function sqliteClearSession(sessionToken: string | undefined) {
   if (!sessionToken) {
     return;
   }
 
-  const store = await readStore();
-  const nextSessions = store.sessions.filter((entry) => entry.token !== sessionToken);
-
-  if (nextSessions.length === store.sessions.length) {
-    return;
-  }
-
-  store.sessions = nextSessions;
-  await writeStore(store);
+  const database = getDatabase();
+  database
+    .prepare(`
+      DELETE FROM sessions
+      WHERE token = :token
+    `)
+    .run({ token: sessionToken });
 }
 
-export async function rotateLauncherToken(sessionToken: string | undefined): Promise<PublicUser | null> {
-  const store = await readStore();
-  const user = findUserBySession(store, sessionToken);
+async function sqliteRotateLauncherToken(sessionToken: string | undefined): Promise<PublicUser | null> {
+  const database = getDatabase();
+  const user = findUserBySession(database, sessionToken);
 
   if (!user) {
     return null;
   }
 
-  user.launcherToken = createSessionToken();
-  user.launcherTokenUpdatedAt = new Date().toISOString();
-  await writeStore(store);
+  const launcherToken = createSessionToken();
+  const launcherTokenUpdatedAt = new Date().toISOString();
 
+  database
+    .prepare(`
+      UPDATE users
+      SET launcher_token = :launcherToken,
+          launcher_token_updated_at = :launcherTokenUpdatedAt
+      WHERE id = :id
+    `)
+    .run({
+      id: user.id,
+      launcherToken,
+      launcherTokenUpdatedAt,
+    });
+
+  user.launcherToken = launcherToken;
+  user.launcherTokenUpdatedAt = launcherTokenUpdatedAt;
   return toPublicUser(user);
 }
 
-export async function authenticateLauncher(input: LoginInput): Promise<LauncherAuthUser | null> {
+async function sqliteAuthenticateLauncher(input: LoginInput): Promise<LauncherAuthUser | null> {
   const identifier = input.identifier.trim().toLowerCase();
   const password = input.password;
 
@@ -316,34 +677,67 @@ export async function authenticateLauncher(input: LoginInput): Promise<LauncherA
     return null;
   }
 
-  const store = await readStore();
-  const user =
-    store.users.find(
-      (entry) => entry.login.toLowerCase() === identifier || entry.email.toLowerCase() === identifier,
-    ) ?? null;
+  const database = getDatabase();
+  const user = findUserByIdentifier(database, identifier);
 
   if (!user || !verifyPassword(password, user.passwordHash)) {
     return null;
   }
 
-  user.lastLoginAt = new Date().toISOString();
-  await writeStore(store);
+  const now = new Date().toISOString();
 
+  database
+    .prepare(`
+      UPDATE users
+      SET last_login_at = :lastLoginAt
+      WHERE id = :id
+    `)
+    .run({
+      id: user.id,
+      lastLoginAt: now,
+    });
+
+  user.lastLoginAt = now;
   return toLauncherAuthUser(user);
 }
 
-export async function getLauncherUserByToken(launcherToken: string | undefined): Promise<LauncherAuthUser | null> {
+async function sqliteGetLauncherUserByToken(launcherToken: string | undefined): Promise<LauncherAuthUser | null> {
   if (!launcherToken) {
     return null;
   }
 
-  const store = await readStore();
-  const user = store.users.find((entry) => entry.launcherToken === launcherToken);
-
+  const database = getDatabase();
+  const user = findUserByLauncherToken(database, launcherToken);
   return user ? toLauncherAuthUser(user) : null;
 }
 
-export async function updateProfileBySession(
+async function sqliteListUsersForDirectory(sessionToken: string | undefined): Promise<DirectoryUser[] | null> {
+  if (!sessionToken) {
+    return null;
+  }
+
+  const database = getDatabase();
+  const currentUser = findUserBySession(database, sessionToken);
+
+  if (!currentUser) {
+    return null;
+  }
+
+  const rows = database
+    .prepare(`
+      SELECT ${userSelectColumns}
+      FROM users
+      ORDER BY datetime(last_login_at) DESC, datetime(created_at) DESC, login ASC
+    `)
+    .all() as UserRow[];
+
+  return rows
+    .map((row) => mapStoredUser(row))
+    .filter((user): user is StoredUser => user !== null)
+    .map((user) => toDirectoryUser(user, currentUser.id));
+}
+
+async function sqliteUpdateProfileBySession(
   sessionToken: string | undefined,
   input: UpdateProfileInput,
 ): Promise<
@@ -358,32 +752,43 @@ export async function updateProfileBySession(
     return { ok: false, error: "fill" };
   }
 
-  const store = await readStore();
-  const user = findUserBySession(store, sessionToken);
+  const database = getDatabase();
+  const user = findUserBySession(database, sessionToken);
 
   if (!user) {
     return { ok: false, error: "unauthorized" };
   }
 
-  const exists = store.users.some(
-    (entry) =>
-      entry.id !== user.id &&
-      (entry.login.toLowerCase() === login.toLowerCase() || entry.email.toLowerCase() === email),
-  );
+  try {
+    database
+      .prepare(`
+        UPDATE users
+        SET login = :login,
+            email = :email,
+            nickname = :nickname
+        WHERE id = :id
+      `)
+      .run({
+        id: user.id,
+        login,
+        email,
+        nickname,
+      });
+  } catch (error) {
+    if (isUniqueConstraintError(error)) {
+      return { ok: false, error: "exists" };
+    }
 
-  if (exists) {
-    return { ok: false, error: "exists" };
+    throw error;
   }
 
   user.login = login;
   user.email = email;
   user.nickname = nickname;
-  await writeStore(store);
-
   return { ok: true, user: toPublicUser(user) };
 }
 
-export async function updatePasswordBySession(
+async function sqliteUpdatePasswordBySession(
   sessionToken: string | undefined,
   input: UpdatePasswordInput,
 ): Promise<{ ok: true } | { ok: false; error: "unauthorized" | "fill" | "password" | "invalid" }> {
@@ -398,8 +803,8 @@ export async function updatePasswordBySession(
     return { ok: false, error: "password" };
   }
 
-  const store = await readStore();
-  const user = findUserBySession(store, sessionToken);
+  const database = getDatabase();
+  const user = findUserBySession(database, sessionToken);
 
   if (!user) {
     return { ok: false, error: "unauthorized" };
@@ -409,8 +814,75 @@ export async function updatePasswordBySession(
     return { ok: false, error: "invalid" };
   }
 
-  user.passwordHash = hashPassword(nextPassword);
-  await writeStore(store);
+  database
+    .prepare(`
+      UPDATE users
+      SET password_hash = :passwordHash
+      WHERE id = :id
+    `)
+    .run({
+      id: user.id,
+      passwordHash: hashPassword(nextPassword),
+    });
 
   return { ok: true };
+}
+
+export async function registerUser(input: RegisterInput): Promise<RegisterResult> {
+  return shouldUsePostgres() ? postgresAuth.registerUser(input) : sqliteRegisterUser(input);
+}
+
+export async function loginUser(input: LoginInput): Promise<LoginResult> {
+  return shouldUsePostgres() ? postgresAuth.loginUser(input) : sqliteLoginUser(input);
+}
+
+export async function getUserBySession(sessionToken: string | undefined): Promise<PublicUser | null> {
+  return shouldUsePostgres() ? postgresAuth.getUserBySession(sessionToken) : sqliteGetUserBySession(sessionToken);
+}
+
+export async function clearSession(sessionToken: string | undefined) {
+  return shouldUsePostgres() ? postgresAuth.clearSession(sessionToken) : sqliteClearSession(sessionToken);
+}
+
+export async function rotateLauncherToken(sessionToken: string | undefined): Promise<PublicUser | null> {
+  return shouldUsePostgres()
+    ? postgresAuth.rotateLauncherToken(sessionToken)
+    : sqliteRotateLauncherToken(sessionToken);
+}
+
+export async function authenticateLauncher(input: LoginInput): Promise<LauncherAuthUser | null> {
+  return shouldUsePostgres() ? postgresAuth.authenticateLauncher(input) : sqliteAuthenticateLauncher(input);
+}
+
+export async function getLauncherUserByToken(launcherToken: string | undefined): Promise<LauncherAuthUser | null> {
+  return shouldUsePostgres()
+    ? postgresAuth.getLauncherUserByToken(launcherToken)
+    : sqliteGetLauncherUserByToken(launcherToken);
+}
+
+export async function listUsersForDirectory(sessionToken: string | undefined): Promise<DirectoryUser[] | null> {
+  return shouldUsePostgres()
+    ? postgresAuth.listUsersForDirectory(sessionToken)
+    : sqliteListUsersForDirectory(sessionToken);
+}
+
+export async function updateProfileBySession(
+  sessionToken: string | undefined,
+  input: UpdateProfileInput,
+): Promise<
+  | { ok: true; user: PublicUser }
+  | { ok: false; error: "unauthorized" | "fill" | "exists" }
+> {
+  return shouldUsePostgres()
+    ? postgresAuth.updateProfileBySession(sessionToken, input)
+    : sqliteUpdateProfileBySession(sessionToken, input);
+}
+
+export async function updatePasswordBySession(
+  sessionToken: string | undefined,
+  input: UpdatePasswordInput,
+): Promise<{ ok: true } | { ok: false; error: "unauthorized" | "fill" | "password" | "invalid" }> {
+  return shouldUsePostgres()
+    ? postgresAuth.updatePasswordBySession(sessionToken, input)
+    : sqliteUpdatePasswordBySession(sessionToken, input);
 }

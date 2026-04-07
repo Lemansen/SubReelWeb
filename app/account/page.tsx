@@ -20,6 +20,8 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { AccountUserDirectory } from "@/components/account-user-directory";
+import { LauncherLanguageStudio } from "@/components/launcher-language-studio";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { fetchSession, logoutAccount, type AccountUser } from "@/lib/auth-client";
 
@@ -199,6 +201,7 @@ export default function AccountPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [message, setMessage] = useState<Message>(null);
   const [currentUser, setCurrentUser] = useState<AccountUser | null>(null);
+  const [activeSection, setActiveSection] = useState<"profile" | "users" | "languages">("profile");
   const [loading, setLoading] = useState(true);
   const [tokenPending, setTokenPending] = useState(false);
   const [profilePending, setProfilePending] = useState(false);
@@ -208,12 +211,31 @@ export default function AccountPage() {
   const pathname = usePathname();
   const router = useRouter();
   const t = content[lang];
+  const sectionText =
+    lang === "RU"
+      ? {
+          badge: "Раздел кабинета",
+          profile: "Профиль",
+          users: "Пользователи",
+          languages: "Языки лаунчера",
+        }
+      : {
+          badge: "Account section",
+          profile: "Profile",
+          users: "Users",
+          languages: "Launcher languages",
+        };
 
   const navItems = [
     { name: t.nav_home, path: "/" },
     { name: t.nav_launcher, path: "/launcher" },
     { name: t.nav_server, path: "/server" },
     { name: t.nav_account, path: "/account" },
+  ];
+  const sectionTabs = [
+    { key: "profile" as const, label: sectionText.profile, icon: <LayoutDashboard size={16} /> },
+    { key: "users" as const, label: sectionText.users, icon: <UserRound size={16} /> },
+    { key: "languages" as const, label: sectionText.languages, icon: <BookOpen size={16} /> },
   ];
 
   useEffect(() => {
@@ -550,6 +572,37 @@ export default function AccountPage() {
                 </aside>
 
                 <div className="space-y-6">
+                  <section className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-4 md:p-5">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent-blue)]">
+                        <LayoutDashboard size={12} />
+                        {sectionText.badge}
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {sectionTabs.map((section) => {
+                          const selected = activeSection === section.key;
+
+                          return (
+                            <button
+                              key={section.key}
+                              type="button"
+                              onClick={() => setActiveSection(section.key)}
+                              className={`inline-flex items-center gap-2 rounded-[1rem] border px-4 py-2.5 text-sm font-black uppercase tracking-[0.16em] transition-colors ${
+                                selected
+                                  ? "border-[var(--color-accent-blue)] bg-[var(--color-accent-blue)] text-white"
+                                  : "border-[var(--color-border-sharp)] bg-[var(--color-bg)] text-[var(--color-text)] hover:bg-[var(--color-panel-hover)]"
+                              }`}
+                            >
+                              {section.icon}
+                              {section.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </section>
+
+                  {activeSection === "profile" ? (
                   <section className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.10),transparent_28%),var(--color-panel-bg)] p-6 md:p-8">
                     <div className="mb-6 space-y-2">
                       <div className="space-y-2">
@@ -693,6 +746,10 @@ export default function AccountPage() {
                       </section>
                     </div>
                   </section>
+                  ) : null}
+
+                  {activeSection === "users" ? <AccountUserDirectory lang={lang} /> : null}
+                  {activeSection === "languages" ? <LauncherLanguageStudio lang={lang} /> : null}
                 </div>
               </section>
 

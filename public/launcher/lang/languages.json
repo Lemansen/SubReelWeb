@@ -1,0 +1,18 @@
+{
+  "languages": [
+    {
+      "code": "ru-RU",
+      "name": "Russian",
+      "nativeName": "Русский",
+      "shortLabel": "RU",
+      "accentHex": "#243A5C"
+    },
+    {
+      "code": "en-US",
+      "name": "English",
+      "nativeName": "English",
+      "shortLabel": "EN",
+      "accentHex": "#2C4A2F"
+    }
+  ]
+}

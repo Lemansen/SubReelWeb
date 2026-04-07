@@ -1,18 +1,23 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, BookOpen, UserRound } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { fetchSession, registerAccount } from "@/lib/auth-client";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const [lang, setLang] = useState<"RU" | "EN">("RU");
   const [form, setForm] = useState({ login: "", email: "", nickname: "", password: "" });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = (() => {
+    const candidate = searchParams.get("next")?.trim();
+    return candidate && candidate.startsWith("/") ? candidate : "/account";
+  })();
 
   const t =
     lang === "RU"
@@ -55,7 +60,7 @@ export default function RegisterPage() {
     fetchSession()
       .then((user) => {
         if (user && !cancelled) {
-          router.replace("/account");
+          router.replace(nextPath);
         }
       })
       .catch(() => {});
@@ -63,7 +68,7 @@ export default function RegisterPage() {
     return () => {
       cancelled = true;
     };
-  }, [router]);
+  }, [nextPath, router]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -84,7 +89,7 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/account");
+    router.push(nextPath);
   }
 
   return (
@@ -139,7 +144,7 @@ export default function RegisterPage() {
             </form>
             <div className="mt-6 text-sm text-[var(--color-text-gray)]">
               {t.switch}{" "}
-              <Link href="/login" className="font-black uppercase tracking-[0.12em] text-[var(--color-accent-blue)]">
+              <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="font-black uppercase tracking-[0.12em] text-[var(--color-accent-blue)]">
                 {t.switchLink}
               </Link>
             </div>
@@ -147,6 +152,14 @@ export default function RegisterPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }
 
