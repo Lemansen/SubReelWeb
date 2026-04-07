@@ -13,6 +13,13 @@
       "nativeName": "English",
       "shortLabel": "EN",
       "accentHex": "#2C4A2F"
+    },
+    {
+      "code": "es-ES",
+      "name": "Spanish",
+      "nativeName": "Español",
+      "shortLabel": "ES",
+      "accentHex": "#C2410C"
     }
   ]
 }

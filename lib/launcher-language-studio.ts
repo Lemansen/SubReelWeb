@@ -134,7 +134,10 @@ async function initDatabase() {
 
   if (count === 0) {
     await seedDatabaseFromFilesystem();
+    return;
   }
+
+  await syncMissingLanguagesFromFilesystem();
 }
 
 async function seedDatabaseFromFilesystem() {
@@ -143,6 +146,51 @@ async function seedDatabaseFromFilesystem() {
   for (const language of languages) {
     const translations = await readTranslationMapFromFilesystem(language.code);
     await upsertLanguageInDatabase(language, translations);
+  }
+}
+
+async function syncMissingLanguagesFromFilesystem() {
+  const languages = await readManifestFromFilesystem();
+
+  for (const language of languages) {
+    const exists = await pool().query<{ code: string }>(
+      `
+        SELECT code
+        FROM launcher_languages
+        WHERE LOWER(code) = LOWER($1)
+        LIMIT 1
+      `,
+      [language.code],
+    );
+
+    if (exists.rowCount) {
+      continue;
+    }
+
+    const translations = await readTranslationMapFromFilesystem(language.code);
+    await pool().query(
+      `
+        INSERT INTO launcher_languages (
+          code,
+          name,
+          native_name,
+          short_label,
+          accent_hex,
+          translations_json,
+          created_at,
+          updated_at
+        )
+        VALUES ($1, $2, $3, $4, $5, $6::jsonb, NOW(), NOW())
+      `,
+      [
+        language.code,
+        language.name,
+        language.nativeName,
+        language.shortLabel,
+        language.accentHex,
+        JSON.stringify(translations),
+      ],
+    );
   }
 }
 
