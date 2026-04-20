@@ -44,9 +44,9 @@ export function ProfileEntry({
     };
   }, []);
 
-  const href = isAuthorized ? "/account" : "/login";
+  const href = isAuthorized ? "/dashboard" : "/login";
   const label = isAuthorized === null ? pendingLabel ?? profileLabel : isAuthorized ? profileLabel : loginLabel;
-  const isActive = pathname === href || pathname === "/account";
+  const isActive = pathname === href || pathname === "/dashboard";
 
   if (mobile) {
     return (

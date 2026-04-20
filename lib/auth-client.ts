@@ -1,22 +1,14 @@
 "use client";
 
-export type AccountUser = {
-  id: string;
-  login: string;
-  email: string;
-  nickname: string;
-  role: "player";
-  launcherToken: string;
-  launcherTokenUpdatedAt: string;
-  microsoftConnected: boolean;
-  createdAt: string;
-  lastLoginAt: string;
-};
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { AccountUser } from "@/lib/auth-session";
+
+export type { AccountUser } from "@/lib/auth-session";
 
 type RegisterError = "fill" | "password" | "exists" | "unknown";
 type LoginError = "fill" | "invalid" | "unknown";
 
-type RegisterResult = { ok: true; user: AccountUser } | { ok: false; error: RegisterError };
+type RegisterResult = { ok: true; user: AccountUser | null } | { ok: false; error: RegisterError };
 type LoginResult = { ok: true; user: AccountUser } | { ok: false; error: LoginError };
 
 type SessionResult = {
@@ -47,45 +39,110 @@ export async function fetchSession(): Promise<AccountUser | null> {
   return result?.ok ? result.user : null;
 }
 
+async function resolveIdentifier(identifier: string) {
+  const response = await fetch("/api/auth/resolve-identifier", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ identifier }),
+  });
+
+  const result = await parseResponse<{ ok: true; email: string }>(response);
+  return result?.email ?? identifier;
+}
+
+async function checkRegisterAvailability(login: string) {
+  const response = await fetch("/api/auth/register-check", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ login }),
+  });
+
+  const result = await parseResponse<{ ok: true; exists: boolean }>(response);
+  return Boolean(result?.exists);
+}
+
 export async function registerAccount(input: {
   login: string;
   email: string;
   nickname: string;
   password: string;
 }): Promise<RegisterResult> {
-  const response = await fetch("/api/auth/register", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+  const login = input.login.trim();
+  const email = input.email.trim();
+  const nickname = input.nickname.trim();
+  const password = input.password;
+
+  if (!login || !email || !nickname || !password) {
+    return { ok: false, error: "fill" };
+  }
+
+  if (password.length < 6) {
+    return { ok: false, error: "password" };
+  }
+
+  if (await checkRegisterAvailability(login)) {
+    return { ok: false, error: "exists" };
+  }
+
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        login,
+        nickname,
+      },
     },
-    credentials: "include",
-    body: JSON.stringify(input),
   });
 
-  const result = await parseResponse<RegisterResult>(response);
-  return result ?? { ok: false, error: "unknown" };
+  if (error) {
+    if (/registered|already/i.test(error.message)) {
+      return { ok: false, error: "exists" };
+    }
+
+    return { ok: false, error: "unknown" };
+  }
+
+  const user = await fetchSession();
+  return { ok: true, user };
 }
 
 export async function loginAccount(input: {
   identifier: string;
   password: string;
 }): Promise<LoginResult> {
-  const response = await fetch("/api/auth/login", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(input),
+  const identifier = input.identifier.trim();
+  const password = input.password;
+
+  if (!identifier || !password) {
+    return { ok: false, error: "fill" };
+  }
+
+  const email = await resolveIdentifier(identifier);
+  const supabase = getSupabaseBrowserClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
   });
 
-  const result = await parseResponse<LoginResult>(response);
-  return result ?? { ok: false, error: "unknown" };
+  if (error) {
+    return { ok: false, error: "invalid" };
+  }
+
+  const user = await fetchSession();
+  if (!user) {
+    return { ok: false, error: "invalid" };
+  }
+
+  return { ok: true, user };
 }
 
 export async function logoutAccount() {
-  await fetch("/api/auth/logout", {
-    method: "POST",
-    credentials: "include",
-  });
+  const supabase = getSupabaseBrowserClient();
+  await supabase.auth.signOut();
 }

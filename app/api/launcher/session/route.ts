@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getLauncherUserByToken } from "@/lib/auth-server";
+import { getAccountUserFromAccessToken } from "@/lib/auth-session";
 
 function readBearerToken(request: Request) {
   const header = request.headers.get("authorization");
@@ -13,7 +13,7 @@ function readBearerToken(request: Request) {
 
 export async function GET(request: Request) {
   const launcherToken = readBearerToken(request);
-  const user = await getLauncherUserByToken(launcherToken);
+  const user = await getAccountUserFromAccessToken(launcherToken ?? "");
 
   if (!user) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
