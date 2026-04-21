@@ -8,8 +8,10 @@ export type { AccountUser } from "@/lib/auth-session";
 type RegisterError = "fill" | "password" | "exists" | "unknown";
 type LoginError = "fill" | "invalid" | "unknown";
 
-type RegisterResult = { ok: true; user: AccountUser | null } | { ok: false; error: RegisterError };
-type LoginResult = { ok: true; user: AccountUser } | { ok: false; error: LoginError };
+type RegisterResult =
+  | { ok: true; user: AccountUser | null; pendingVerification: boolean }
+  | { ok: false; error: RegisterError };
+type LoginResult = { ok: true; user: AccountUser | null } | { ok: false; error: LoginError };
 
 type SessionResult = {
   ok: true;
@@ -52,17 +54,21 @@ async function resolveIdentifier(identifier: string) {
   return result?.email ?? identifier;
 }
 
-async function checkRegisterAvailability(login: string) {
+async function checkRegisterAvailability(login: string, email: string) {
   const response = await fetch("/api/auth/register-check", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ login }),
+    body: JSON.stringify({ login, email }),
   });
 
-  const result = await parseResponse<{ ok: true; exists: boolean }>(response);
-  return Boolean(result?.exists);
+  const result = await parseResponse<{ ok: true; exists: boolean; loginExists: boolean; emailExists: boolean }>(response);
+  return {
+    exists: Boolean(result?.exists),
+    loginExists: Boolean(result?.loginExists),
+    emailExists: Boolean(result?.emailExists),
+  };
 }
 
 export async function registerAccount(input: {
@@ -84,12 +90,13 @@ export async function registerAccount(input: {
     return { ok: false, error: "password" };
   }
 
-  if (await checkRegisterAvailability(login)) {
+  const availability = await checkRegisterAvailability(login, email);
+  if (availability.exists) {
     return { ok: false, error: "exists" };
   }
 
   const supabase = getSupabaseBrowserClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -108,8 +115,12 @@ export async function registerAccount(input: {
     return { ok: false, error: "unknown" };
   }
 
+  if (!data.session) {
+    return { ok: true, user: null, pendingVerification: true };
+  }
+
   const user = await fetchSession();
-  return { ok: true, user };
+  return { ok: true, user, pendingVerification: false };
 }
 
 export async function loginAccount(input: {
@@ -135,10 +146,6 @@ export async function loginAccount(input: {
   }
 
   const user = await fetchSession();
-  if (!user) {
-    return { ok: false, error: "invalid" };
-  }
-
   return { ok: true, user };
 }
 

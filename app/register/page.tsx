@@ -19,6 +19,7 @@ function RegisterPageContent() {
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ function RegisterPageContent() {
     event.preventDefault();
     setBusy(true);
     setError(null);
+    setSuccess(null);
 
     const result = await registerAccount({
       login,
@@ -49,13 +51,19 @@ function RegisterPageContent() {
           : result.error === "password"
             ? "Пароль должен быть не короче 6 символов."
             : result.error === "exists"
-              ? "Такой логин или email уже занят."
+              ? "Такой логин или email уже занят. Если это твой аккаунт, просто войди."
               : "Регистрация не удалась. Попробуй ещё раз.",
       );
       return;
     }
 
-    router.replace(nextPath);
+    if (result.pendingVerification) {
+      setBusy(false);
+      setSuccess("Аккаунт создан. Проверь почту и подтверди email, если Supabase требует подтверждение.");
+      return;
+    }
+
+    window.location.assign(nextPath);
   }
 
   return (
@@ -116,6 +124,10 @@ function RegisterPageContent() {
                 <div className="rounded-[1rem] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700 md:col-span-2">{error}</div>
               ) : null}
 
+              {success ? (
+                <div className="rounded-[1rem] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 md:col-span-2">{success}</div>
+              ) : null}
+
               <div className="md:col-span-2">
                 <button
                   type="submit"
@@ -132,7 +144,7 @@ function RegisterPageContent() {
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">Архитектура</p>
             <div className="mt-5 flex flex-col gap-4 text-sm text-[var(--color-text-gray)]">
               <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
-                Профиль пользователя хранится в Supabase Auth + `user_profiles`, чтобы сайт и лаунчер говорили на одном API.
+                Профиль пользователя хранится в Supabase Auth + user_profiles, чтобы сайт и лаунчер говорили на одном API.
               </div>
               <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
                 Позже на этой базе можно без переделки достроить друзей, чат, рейтинг, баги, идеи и moderation dashboard.

@@ -44,7 +44,7 @@ function LoginPageContent() {
       return;
     }
 
-    router.replace(nextPath);
+    window.location.assign(nextPath);
   }
 
   return (

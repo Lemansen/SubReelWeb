@@ -95,6 +95,27 @@ export async function findProfileByLogin(login: string) {
   }
 }
 
+export async function findProfileByEmail(email: string) {
+  const normalizedEmail = normalizeText(email).toLowerCase();
+
+  if (!normalizedEmail) {
+    return null;
+  }
+
+  try {
+    const admin = getSupabaseAdminClient() as any;
+    const { data } = await admin
+      .from("user_profiles")
+      .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+      .eq("email", normalizedEmail)
+      .maybeSingle();
+
+    return (data as UserProfileRecord | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function ensureUserProfile(user: User) {
   const fallback = buildFallbackProfile(user);
 
