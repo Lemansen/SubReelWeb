@@ -1,4 +1,4 @@
-import type { User } from "@supabase/supabase-js";
+import { createClient, type User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicEnv } from "@/lib/supabase/shared";
@@ -16,6 +16,17 @@ export type AccountUser = {
   microsoftConnected: boolean;
   createdAt: string;
   lastLoginAt: string;
+};
+
+export type DirectoryAccountUser = {
+  id: string;
+  login: string;
+  nickname: string;
+  role: AccountRole;
+  createdAt: string;
+  lastLoginAt: string;
+  microsoftConnected: boolean;
+  isCurrentUser: boolean;
 };
 
 type UserProfileRecord = {
@@ -42,6 +53,10 @@ function sanitizeLogin(value: string) {
     .replace(/^_+|_+$/g, "");
 
   return normalized || `user_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function sanitizeAccountLogin(value: string) {
+  return sanitizeLogin(value);
 }
 
 function buildFallbackProfile(user: User): UserProfileRecord {
@@ -75,6 +90,19 @@ function toAccountUser(profile: UserProfileRecord, launcherToken = ""): AccountU
     microsoftConnected: Boolean(profile.microsoft_connected),
     createdAt: profile.created_at,
     lastLoginAt: profile.last_login_at ?? profile.updated_at,
+  };
+}
+
+function toDirectoryAccountUser(profile: UserProfileRecord, currentUserId: string): DirectoryAccountUser {
+  return {
+    id: profile.id,
+    login: profile.login,
+    nickname: profile.nickname,
+    role: profile.role,
+    createdAt: profile.created_at,
+    lastLoginAt: profile.last_login_at ?? profile.updated_at,
+    microsoftConnected: Boolean(profile.microsoft_connected),
+    isCurrentUser: profile.id === currentUserId,
   };
 }
 
@@ -182,6 +210,31 @@ export async function getCurrentAccountUser() {
   return toAccountUser(profile, session?.access_token ?? "");
 }
 
+export async function getCurrentAccountContext() {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  const profile = await ensureUserProfile(user);
+
+  return {
+    supabase,
+    user,
+    session,
+    profile,
+    accountUser: toAccountUser(profile, session?.access_token ?? ""),
+  };
+}
+
 export async function getAccountUserFromAccessToken(accessToken: string) {
   const token = normalizeText(accessToken);
   if (!token) {
@@ -205,4 +258,160 @@ export async function getAccountUserFromAccessToken(accessToken: string) {
   const user = (await response.json()) as User;
   const profile = await ensureUserProfile(user);
   return toAccountUser(profile, token);
+}
+
+export async function listAccountDirectoryUsers() {
+  const current = await getCurrentAccountUser();
+
+  if (!current) {
+    return null;
+  }
+
+  const admin = getSupabaseAdminClient() as any;
+  const { data } = await admin
+    .from("user_profiles")
+    .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+    .order("last_login_at", { ascending: false })
+    .order("created_at", { ascending: false });
+
+  const rows = (data as UserProfileRecord[] | null) ?? [];
+  return rows.map((item) => toDirectoryAccountUser(item, current.id));
+}
+
+export async function updateCurrentAccountProfile(input: {
+  login: string;
+  email: string;
+  nickname: string;
+}) {
+  const login = sanitizeLogin(input.login);
+  const email = normalizeText(input.email).toLowerCase();
+  const nickname = normalizeText(input.nickname);
+
+  if (!login || !email || !nickname) {
+    return { ok: false as const, error: "fill" as const };
+  }
+
+  const context = await getCurrentAccountContext();
+  if (!context) {
+    return { ok: false as const, error: "unauthorized" as const };
+  }
+
+  const [loginProfile, emailProfile] = await Promise.all([
+    findProfileByLogin(login),
+    findProfileByEmail(email),
+  ]);
+
+  if ((loginProfile && loginProfile.id !== context.user.id) || (emailProfile && emailProfile.id !== context.user.id)) {
+    return { ok: false as const, error: "exists" as const };
+  }
+
+  const metadataChanged =
+    login !== context.profile.login ||
+    nickname !== context.profile.nickname ||
+    email !== context.profile.email;
+
+  let nextEmail = context.profile.email;
+
+  if (metadataChanged) {
+    const updatePayload: {
+      email?: string;
+      data?: Record<string, unknown>;
+    } = {};
+
+    if (email !== context.profile.email) {
+      updatePayload.email = email;
+    }
+
+    if (login !== context.profile.login || nickname !== context.profile.nickname) {
+      updatePayload.data = {
+        ...(context.user.user_metadata ?? {}),
+        login,
+        nickname,
+      };
+    }
+
+    if (Object.keys(updatePayload).length > 0) {
+      const { data, error } = await context.supabase.auth.updateUser(updatePayload);
+      if (error) {
+        if (/already|exists|registered/i.test(error.message)) {
+          return { ok: false as const, error: "exists" as const };
+        }
+
+        return { ok: false as const, error: "invalid" as const };
+      }
+
+      nextEmail = normalizeText(data.user?.email, context.profile.email);
+    }
+  }
+
+  const admin = getSupabaseAdminClient() as any;
+  const { data, error } = await admin
+    .from("user_profiles")
+    .update({
+      login,
+      email: nextEmail,
+      nickname,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", context.user.id)
+    .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+    .single();
+
+  if (error || !data) {
+    return { ok: false as const, error: "invalid" as const };
+  }
+
+  return {
+    ok: true as const,
+    user: toAccountUser(data as UserProfileRecord, context.session?.access_token ?? ""),
+  };
+}
+
+export async function updateCurrentAccountPassword(input: {
+  currentPassword: string;
+  nextPassword: string;
+}) {
+  const currentPassword = input.currentPassword;
+  const nextPassword = input.nextPassword;
+
+  if (!currentPassword || !nextPassword) {
+    return { ok: false as const, error: "fill" as const };
+  }
+
+  if (nextPassword.length < 6) {
+    return { ok: false as const, error: "password" as const };
+  }
+
+  const context = await getCurrentAccountContext();
+  if (!context) {
+    return { ok: false as const, error: "unauthorized" as const };
+  }
+
+  const { url, anonKey } = getSupabasePublicEnv();
+  const verifier = createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
+
+  const verifyResult = await verifier.auth.signInWithPassword({
+    email: context.profile.email,
+    password: currentPassword,
+  });
+
+  if (verifyResult.error) {
+    return { ok: false as const, error: "invalid" as const };
+  }
+
+  const { error } = await context.supabase.auth.updateUser({
+    password: nextPassword,
+  });
+
+  if (error) {
+    return { ok: false as const, error: "invalid" as const };
+  }
+
+  return { ok: true as const };
 }

@@ -1,14 +1,11 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { clearSession } from "@/lib/auth-server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 const sessionCookieName = "subreel_session";
 
 export async function POST() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(sessionCookieName)?.value;
-
-  await clearSession(sessionToken);
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
 
   const response = NextResponse.json({ ok: true });
   response.cookies.set(sessionCookieName, "", {

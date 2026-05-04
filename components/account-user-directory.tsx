@@ -9,7 +9,7 @@ type DirectoryUser = {
   id: string;
   login: string;
   nickname: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   createdAt: string;
   lastLoginAt: string;
   microsoftConnected: boolean;

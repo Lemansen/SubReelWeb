@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { loginUser } from "@/lib/auth-server";
-
-const sessionCookieName = "subreel_session";
+import { resolveIdentifierToEmail, getAccountUserFromAccessToken } from "@/lib/auth-session";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
@@ -9,23 +8,26 @@ export async function POST(request: Request) {
     password?: string;
   };
 
-  const result = await loginUser({
-    identifier: body.identifier ?? "",
-    password: body.password ?? "",
-  });
+  const identifier = body.identifier?.trim() ?? "";
+  const password = body.password ?? "";
 
-  if (!result.ok) {
-    return NextResponse.json(result, { status: result.error === "fill" ? 400 : 401 });
+  if (!identifier || !password) {
+    return NextResponse.json({ ok: false, error: "fill" }, { status: 400 });
   }
 
-  const response = NextResponse.json({ ok: true, user: result.user });
-  response.cookies.set(sessionCookieName, result.sessionToken, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
+  const email = await resolveIdentifierToEmail(identifier);
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
   });
+
+  if (error || !data.session?.access_token) {
+    return NextResponse.json({ ok: false, error: "invalid", message: error?.message }, { status: 401 });
+  }
+
+  const user = await getAccountUserFromAccessToken(data.session.access_token);
+  const response = NextResponse.json({ ok: true, user });
 
   return response;
 }

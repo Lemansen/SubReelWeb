@@ -1,19 +1,14 @@
-import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { updatePasswordBySession, updateProfileBySession } from "@/lib/auth-server";
-
-const sessionCookieName = "subreel_session";
+import { updateCurrentAccountPassword, updateCurrentAccountProfile } from "@/lib/auth-session";
 
 export async function PATCH(request: Request) {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(sessionCookieName)?.value;
   const body = (await request.json()) as {
     login?: string;
     email?: string;
     nickname?: string;
   };
 
-  const result = await updateProfileBySession(sessionToken, {
+  const result = await updateCurrentAccountProfile({
     login: body.login ?? "",
     email: body.email ?? "",
     nickname: body.nickname ?? "",
@@ -30,14 +25,12 @@ export async function PATCH(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get(sessionCookieName)?.value;
   const body = (await request.json()) as {
     currentPassword?: string;
     nextPassword?: string;
   };
 
-  const result = await updatePasswordBySession(sessionToken, {
+  const result = await updateCurrentAccountPassword({
     currentPassword: body.currentPassword ?? "",
     nextPassword: body.nextPassword ?? "",
   });

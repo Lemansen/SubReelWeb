@@ -163,4 +163,8 @@ export async function loginAccount(input: {
 export async function logoutAccount() {
   const supabase = getSupabaseBrowserClient();
   await supabase.auth.signOut();
+  await fetch("/api/auth/logout", {
+    method: "POST",
+    credentials: "include",
+  }).catch(() => null);
 }
