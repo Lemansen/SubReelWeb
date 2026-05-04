@@ -10,8 +10,15 @@ type LoginError = "fill" | "invalid" | "unknown";
 
 type RegisterResult =
   | { ok: true; user: AccountUser | null; pendingVerification: boolean }
-  | { ok: false; error: RegisterError };
-type LoginResult = { ok: true; user: AccountUser | null } | { ok: false; error: LoginError };
+  | {
+      ok: false;
+      error: RegisterError;
+      reason?: "login" | "email" | "login_and_email";
+      message?: string;
+    };
+type LoginResult =
+  | { ok: true; user: AccountUser | null }
+  | { ok: false; error: LoginError; message?: string };
 
 type SessionResult = {
   ok: true;
@@ -92,7 +99,11 @@ export async function registerAccount(input: {
 
   const availability = await checkRegisterAvailability(login, email);
   if (availability.exists) {
-    return { ok: false, error: "exists" };
+    return {
+      ok: false,
+      error: "exists",
+      reason: availability.loginExists && availability.emailExists ? "login_and_email" : availability.loginExists ? "login" : "email",
+    };
   }
 
   const supabase = getSupabaseBrowserClient();
@@ -109,10 +120,10 @@ export async function registerAccount(input: {
 
   if (error) {
     if (/registered|already/i.test(error.message)) {
-      return { ok: false, error: "exists" };
+      return { ok: false, error: "exists", message: error.message };
     }
 
-    return { ok: false, error: "unknown" };
+    return { ok: false, error: "unknown", message: error.message };
   }
 
   if (!data.session) {
@@ -142,7 +153,7 @@ export async function loginAccount(input: {
   });
 
   if (error) {
-    return { ok: false, error: "invalid" };
+    return { ok: false, error: "invalid", message: error.message };
   }
 
   const user = await fetchSession();

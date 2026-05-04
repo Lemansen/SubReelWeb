@@ -39,7 +39,9 @@ function LoginPageContent() {
       setError(
         result.error === "fill"
           ? "Заполни логин или email и пароль."
-          : "Не удалось войти. Проверь данные и попробуй ещё раз.",
+          : result.message
+            ? `Не удалось войти: ${result.message}`
+            : "Не удалось войти. Проверь данные и попробуй ещё раз.",
       );
       return;
     }

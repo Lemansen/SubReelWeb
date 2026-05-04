@@ -11,7 +11,7 @@ export type StoredUser = {
   email: string;
   nickname: string;
   passwordHash: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcherToken: string;
   launcherTokenUpdatedAt: string;
   microsoftConnected: boolean;
@@ -36,7 +36,7 @@ type UserRow = {
   email: string;
   nickname: string;
   password_hash: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcher_token: string;
   launcher_token_updated_at: string;
   microsoft_connected: number;
@@ -170,7 +170,7 @@ function initializeDatabase(database: { exec(sql: string): void; prepare(sql: st
       email TEXT NOT NULL COLLATE NOCASE UNIQUE,
       nickname TEXT NOT NULL,
       password_hash TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'player' CHECK (role = 'player'),
+      role TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player', 'moderator', 'admin')),
       launcher_token TEXT NOT NULL UNIQUE,
       launcher_token_updated_at TEXT NOT NULL,
       microsoft_connected INTEGER NOT NULL DEFAULT 0 CHECK (microsoft_connected IN (0, 1)),
@@ -344,7 +344,7 @@ function mapStoredUser(row: UserRow | null | undefined): StoredUser | null {
     email: row.email,
     nickname: row.nickname,
     passwordHash: row.password_hash,
-    role: "player",
+    role: row.role,
     launcherToken: row.launcher_token,
     launcherTokenUpdatedAt: row.launcher_token_updated_at,
     microsoftConnected: Boolean(row.microsoft_connected),

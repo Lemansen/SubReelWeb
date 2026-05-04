@@ -11,7 +11,7 @@ type StoredUser = {
   email: string;
   nickname: string;
   passwordHash: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcherToken: string;
   launcherTokenUpdatedAt: string;
   microsoftConnected: boolean;
@@ -27,7 +27,7 @@ type UserRow = {
   email: string;
   nickname: string;
   password_hash: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcher_token: string;
   launcher_token_updated_at: string | Date;
   microsoft_connected: boolean;
@@ -86,7 +86,7 @@ async function initDb() {
       id TEXT PRIMARY KEY,
       login TEXT NOT NULL,
       email TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player','admin')),
+      role TEXT NOT NULL DEFAULT 'player' CHECK (role IN ('player','moderator','admin')),
       status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','blocked','deleted')),
       created_at TIMESTAMPTZ NOT NULL,
       updated_at TIMESTAMPTZ NOT NULL,
@@ -265,7 +265,7 @@ function mapUser(row: UserRow | null | undefined): StoredUser | null {
     email: email(row.email),
     nickname: text(row.nickname) || text(row.login) || "Player",
     passwordHash: text(row.password_hash),
-    role: "player",
+    role: row.role,
     launcherToken: text(row.launcher_token) || token32(),
     launcherTokenUpdatedAt: stamp(row.launcher_token_updated_at),
     microsoftConnected: Boolean(row.microsoft_connected),

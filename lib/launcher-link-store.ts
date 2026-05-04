@@ -10,7 +10,7 @@ type LauncherAuthUser = {
   id: string;
   login: string;
   nickname: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcherToken: string;
   microsoftConnected: boolean;
   lastLoginAt: string;
@@ -50,7 +50,7 @@ type PgUserRow = {
   id: string;
   login: string;
   nickname: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcher_token: string;
   microsoft_connected: boolean;
   last_login_at: string | Date;
@@ -60,7 +60,7 @@ type SqliteUserRow = {
   id: string;
   login: string;
   nickname: string;
-  role: "player";
+  role: "player" | "moderator" | "admin";
   launcher_token: string;
   microsoft_connected: number;
   last_login_at: string;
@@ -164,7 +164,7 @@ function mapPgUser(row: PgUserRow | null | undefined): LauncherAuthUser | null {
     id: row.id,
     login: row.login,
     nickname: row.nickname,
-    role: "player",
+    role: row.role,
     launcherToken: row.launcher_token,
     microsoftConnected: Boolean(row.microsoft_connected),
     lastLoginAt: toIso(row.last_login_at),
@@ -177,7 +177,7 @@ function mapSqliteUser(row: SqliteUserRow | null | undefined): LauncherAuthUser 
     id: row.id,
     login: row.login,
     nickname: row.nickname,
-    role: "player",
+    role: row.role,
     launcherToken: row.launcher_token,
     microsoftConnected: Boolean(row.microsoft_connected),
     lastLoginAt: row.last_login_at,
