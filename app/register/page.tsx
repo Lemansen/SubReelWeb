@@ -144,14 +144,6 @@ function RegisterPageContent() {
 
           <aside className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-8">
             <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">Что дальше</p>
-            <div className="mt-5 flex flex-col gap-4 text-sm text-[var(--color-text-gray)]">
-              <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
-                Внутри Supabase у аккаунта всё равно остаётся служебный email для auth-механики, но пользователь его больше не вводит и не редактирует.
-              </div>
-              <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
-                Следующим шагом мы сможем привязать Telegram-бота и сделать подтверждение, восстановление и связь аккаунта уже через него.
-              </div>
-            </div>
 
             <div className="mt-6">
               <Link href={`/login?next=${encodeURIComponent(nextPath)}`} className="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-accent-blue)]">
