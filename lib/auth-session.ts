@@ -161,7 +161,6 @@ export async function ensureUserProfile(user: User) {
       login: fallback.login,
       email: fallback.email,
       nickname: fallback.nickname,
-      role: fallback.role,
       telegram_user_id: fallback.telegram_user_id,
       telegram_username: fallback.telegram_username,
       telegram_verified_at: fallback.telegram_verified_at,
