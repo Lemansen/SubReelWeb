@@ -2,7 +2,6 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { AccountUser } from "@/lib/auth-session";
-import { createInternalEmailFromLogin } from "@/lib/account-identity";
 
 export type { AccountUser } from "@/lib/auth-session";
 
@@ -34,6 +33,13 @@ async function parseResponse<T>(response: Response): Promise<T | null> {
   }
 }
 
+async function readErrorMessage(response: Response, fallback: string) {
+  const result = await parseResponse<{ message?: unknown; error?: unknown }>(response);
+  const message = typeof result?.message === "string" ? result.message.trim() : "";
+  const error = typeof result?.error === "string" ? result.error.trim() : "";
+  return message || error || fallback;
+}
+
 export async function fetchSession(): Promise<AccountUser | null> {
   const response = await fetch("/api/auth/session", {
     method: "GET",
@@ -62,30 +68,12 @@ async function resolveIdentifier(identifier: string) {
   return result?.email ?? identifier;
 }
 
-async function checkRegisterAvailability(login: string, email: string) {
-  const response = await fetch("/api/auth/register-check", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ login, email }),
-  });
-
-  const result = await parseResponse<{ ok: true; exists: boolean; loginExists: boolean; emailExists: boolean }>(response);
-  return {
-    exists: Boolean(result?.exists),
-    loginExists: Boolean(result?.loginExists),
-    emailExists: Boolean(result?.emailExists),
-  };
-}
-
 export async function registerAccount(input: {
   login: string;
   nickname: string;
   password: string;
 }): Promise<RegisterResult> {
   const login = input.login.trim();
-  const email = createInternalEmailFromLogin(login);
   const nickname = input.nickname.trim();
   const password = input.password;
 
@@ -97,41 +85,38 @@ export async function registerAccount(input: {
     return { ok: false, error: "password" };
   }
 
-  const availability = await checkRegisterAvailability(login, email);
-  if (availability.exists) {
-    return {
-      ok: false,
-      error: "exists",
-      reason: availability.loginExists && availability.emailExists ? "login_and_email" : availability.loginExists ? "login" : "email",
-    };
-  }
-
-  const supabase = getSupabaseBrowserClient();
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        login,
-        nickname,
+  try {
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
       },
-    },
-  });
+      body: JSON.stringify({ login, nickname, password }),
+    });
 
-  if (error) {
-    if (/registered|already/i.test(error.message)) {
-      return { ok: false, error: "exists", message: error.message };
+    const result = await parseResponse<RegisterResult>(response);
+
+    if (response.ok && result?.ok) {
+      return result;
     }
 
-    return { ok: false, error: "unknown", message: error.message };
-  }
+    if (result && !result.ok) {
+      return result;
+    }
 
-  if (!data.session) {
-    return { ok: true, user: null, pendingVerification: true };
+    return {
+      ok: false,
+      error: "unknown",
+      message: await readErrorMessage(response, `HTTP ${response.status}`),
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: "unknown",
+      message: error instanceof Error && error.message ? error.message : "Не удалось подключиться к серверу регистрации.",
+    };
   }
-
-  const user = await fetchSession();
-  return { ok: true, user, pendingVerification: false };
 }
 
 export async function loginAccount(input: {
