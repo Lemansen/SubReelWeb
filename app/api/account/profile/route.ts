@@ -4,13 +4,11 @@ import { updateCurrentAccountPassword, updateCurrentAccountProfile } from "@/lib
 export async function PATCH(request: Request) {
   const body = (await request.json()) as {
     login?: string;
-    email?: string;
     nickname?: string;
   };
 
   const result = await updateCurrentAccountProfile({
     login: body.login ?? "",
-    email: body.email ?? "",
     nickname: body.nickname ?? "",
   });
 

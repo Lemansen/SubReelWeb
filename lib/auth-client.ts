@@ -2,6 +2,7 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { AccountUser } from "@/lib/auth-session";
+import { createInternalEmailFromLogin } from "@/lib/account-identity";
 
 export type { AccountUser } from "@/lib/auth-session";
 
@@ -80,16 +81,15 @@ async function checkRegisterAvailability(login: string, email: string) {
 
 export async function registerAccount(input: {
   login: string;
-  email: string;
   nickname: string;
   password: string;
 }): Promise<RegisterResult> {
   const login = input.login.trim();
-  const email = input.email.trim();
+  const email = createInternalEmailFromLogin(login);
   const nickname = input.nickname.trim();
   const password = input.password;
 
-  if (!login || !email || !nickname || !password) {
+  if (!login || !nickname || !password) {
     return { ok: false, error: "fill" };
   }
 

@@ -2,6 +2,7 @@ import { createClient, type User } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getSupabasePublicEnv } from "@/lib/supabase/shared";
+import { createInternalEmailFromLogin, sanitizeLoginForIdentity } from "@/lib/account-identity";
 
 export type AccountRole = "player" | "moderator" | "admin";
 
@@ -11,6 +12,9 @@ export type AccountUser = {
   email: string;
   nickname: string;
   role: AccountRole;
+  telegramUserId?: number | null;
+  telegramUsername?: string;
+  telegramVerifiedAt?: string | null;
   launcherToken: string;
   launcherTokenUpdatedAt: string;
   microsoftConnected: boolean;
@@ -35,6 +39,9 @@ type UserProfileRecord = {
   email: string;
   nickname: string;
   role: AccountRole;
+  telegram_user_id?: number | null;
+  telegram_username?: string | null;
+  telegram_verified_at?: string | null;
   microsoft_connected: boolean | null;
   created_at: string;
   updated_at: string;
@@ -46,13 +53,7 @@ function normalizeText(value: unknown, fallback = "") {
 }
 
 function sanitizeLogin(value: string) {
-  const normalized = value
-    .toLowerCase()
-    .replace(/[^a-z0-9_]/g, "_")
-    .replace(/_+/g, "_")
-    .replace(/^_+|_+$/g, "");
-
-  return normalized || `user_${Math.random().toString(36).slice(2, 8)}`;
+  return sanitizeLoginForIdentity(value);
 }
 
 export function sanitizeAccountLogin(value: string) {
@@ -68,9 +69,12 @@ function buildFallbackProfile(user: User): UserProfileRecord {
   return {
     id: user.id,
     login: loginCandidate,
-    email: normalizeText(user.email),
+    email: normalizeText(user.email, createInternalEmailFromLogin(loginCandidate)),
     nickname,
     role: normalizeText(user.user_metadata?.role, "player") as AccountRole,
+    telegram_user_id: null,
+    telegram_username: "",
+    telegram_verified_at: null,
     microsoft_connected: Boolean(user.app_metadata?.providers?.includes?.("azure")),
     created_at: normalizeText(user.created_at, new Date().toISOString()),
     updated_at: new Date().toISOString(),
@@ -85,6 +89,9 @@ function toAccountUser(profile: UserProfileRecord, launcherToken = ""): AccountU
     email: profile.email,
     nickname: profile.nickname,
     role: profile.role,
+    telegramUserId: profile.telegram_user_id ?? null,
+    telegramUsername: profile.telegram_username ?? "",
+    telegramVerifiedAt: profile.telegram_verified_at ?? null,
     launcherToken,
     launcherTokenUpdatedAt: launcherToken ? new Date().toISOString() : "",
     microsoftConnected: Boolean(profile.microsoft_connected),
@@ -113,7 +120,7 @@ export async function findProfileByLogin(login: string) {
     const admin = getSupabaseAdminClient() as any;
     const { data } = await admin
       .from("user_profiles")
-      .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+      .select("id, login, email, nickname, role, telegram_user_id, telegram_username, telegram_verified_at, microsoft_connected, created_at, updated_at, last_login_at")
       .eq("login", normalizedLogin)
       .maybeSingle();
 
@@ -134,7 +141,7 @@ export async function findProfileByEmail(email: string) {
     const admin = getSupabaseAdminClient() as any;
     const { data } = await admin
       .from("user_profiles")
-      .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+      .select("id, login, email, nickname, role, telegram_user_id, telegram_username, telegram_verified_at, microsoft_connected, created_at, updated_at, last_login_at")
       .eq("email", normalizedEmail)
       .maybeSingle();
 
@@ -155,6 +162,9 @@ export async function ensureUserProfile(user: User) {
       email: fallback.email,
       nickname: fallback.nickname,
       role: fallback.role,
+      telegram_user_id: fallback.telegram_user_id,
+      telegram_username: fallback.telegram_username,
+      telegram_verified_at: fallback.telegram_verified_at,
       microsoft_connected: fallback.microsoft_connected,
       created_at: fallback.created_at,
       updated_at: new Date().toISOString(),
@@ -164,7 +174,7 @@ export async function ensureUserProfile(user: User) {
     const { data, error } = await admin
       .from("user_profiles")
       .upsert(payload, { onConflict: "id" })
-      .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+      .select("id, login, email, nickname, role, telegram_user_id, telegram_username, telegram_verified_at, microsoft_connected, created_at, updated_at, last_login_at")
       .single();
 
     if (error || !data) {
@@ -270,7 +280,7 @@ export async function listAccountDirectoryUsers() {
   const admin = getSupabaseAdminClient() as any;
   const { data } = await admin
     .from("user_profiles")
-    .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+    .select("id, login, email, nickname, role, telegram_user_id, telegram_username, telegram_verified_at, microsoft_connected, created_at, updated_at, last_login_at")
     .order("last_login_at", { ascending: false })
     .order("created_at", { ascending: false });
 
@@ -280,14 +290,13 @@ export async function listAccountDirectoryUsers() {
 
 export async function updateCurrentAccountProfile(input: {
   login: string;
-  email: string;
   nickname: string;
 }) {
   const login = sanitizeLogin(input.login);
-  const email = normalizeText(input.email).toLowerCase();
+  const email = createInternalEmailFromLogin(login);
   const nickname = normalizeText(input.nickname);
 
-  if (!login || !email || !nickname) {
+  if (!login || !nickname) {
     return { ok: false as const, error: "fill" as const };
   }
 
@@ -354,7 +363,7 @@ export async function updateCurrentAccountProfile(input: {
       updated_at: new Date().toISOString(),
     })
     .eq("id", context.user.id)
-    .select("id, login, email, nickname, role, microsoft_connected, created_at, updated_at, last_login_at")
+    .select("id, login, email, nickname, role, telegram_user_id, telegram_username, telegram_verified_at, microsoft_connected, created_at, updated_at, last_login_at")
     .single();
 
   if (error || !data) {

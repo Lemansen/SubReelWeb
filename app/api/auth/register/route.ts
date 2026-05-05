@@ -1,21 +1,21 @@
 import { NextResponse } from "next/server";
 import { findProfileByEmail, findProfileByLogin, getAccountUserFromAccessToken } from "@/lib/auth-session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createInternalEmailFromLogin } from "@/lib/account-identity";
 
 export async function POST(request: Request) {
   const body = (await request.json()) as {
     login?: string;
-    email?: string;
     nickname?: string;
     password?: string;
   };
 
   const login = body.login?.trim() ?? "";
-  const email = body.email?.trim() ?? "";
+  const email = createInternalEmailFromLogin(login);
   const nickname = body.nickname?.trim() ?? "";
   const password = body.password ?? "";
 
-  if (!login || !email || !nickname || !password) {
+  if (!login || !nickname || !password) {
     return NextResponse.json({ ok: false, error: "fill" }, { status: 400 });
   }
 

@@ -38,7 +38,7 @@ function LoginPageContent() {
       setBusy(false);
       setError(
         result.error === "fill"
-          ? "Заполни логин или email и пароль."
+          ? "Заполни логин и пароль."
           : result.message
             ? `Не удалось войти: ${result.message}`
             : "Не удалось войти. Проверь данные и попробуй ещё раз.",
@@ -54,21 +54,20 @@ function LoginPageContent() {
       <div className="mx-auto flex max-w-5xl items-center justify-center">
         <div className="grid w-full gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">Supabase Auth</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">SubReel Auth</p>
             <h1 className="mt-4 text-5xl font-black">Вход в SubReel</h1>
             <p className="mt-4 max-w-2xl text-sm text-[var(--color-text-gray)]">
-              Один аккаунт для сайта, лаунчера, будущей модерации, чатов и всех community-фич. Если сессия уже есть в
-              браузере, мы автоматически пропустим тебя дальше.
+              Один аккаунт для сайта, лаунчера и будущего Telegram-подтверждения. Если сессия уже есть в браузере, мы автоматически пропустим тебя дальше.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-4">
               <label className="flex flex-col gap-2">
-                <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]">Логин или email</span>
+                <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]">Логин</span>
                 <input
                   value={identifier}
                   onChange={(event) => setIdentifier(event.target.value)}
                   className="rounded-[1.2rem] border border-[var(--color-border-sharp)] bg-white/70 px-4 py-4 text-sm outline-none transition focus:border-[var(--color-accent-blue)]"
-                  placeholder="lemansen или mail@example.com"
+                  placeholder="lemansen"
                 />
               </label>
 
@@ -104,7 +103,7 @@ function LoginPageContent() {
                 После логина сайт хранит Supabase session в браузере и автоматически использует её для dashboard и launcher connect.
               </div>
               <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
-                Лаунчер открывает этот сайт, получает JWT через localhost callback и потом валидирует его через API.
+                Дальше аккаунт можно привязать к Telegram и использовать подтверждение через бота вместо email.
               </div>
             </div>
 

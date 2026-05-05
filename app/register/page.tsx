@@ -15,7 +15,6 @@ function RegisterPageContent() {
   const nextPath = useMemo(() => resolveNext(searchParams.get("next")), [searchParams]);
 
   const [login, setLogin] = useState("");
-  const [email, setEmail] = useState("");
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -38,7 +37,6 @@ function RegisterPageContent() {
 
     const result = await registerAccount({
       login,
-      email,
       nickname,
       password,
     });
@@ -51,15 +49,7 @@ function RegisterPageContent() {
           : result.error === "password"
             ? "Пароль должен быть не короче 6 символов."
             : result.error === "exists"
-              ? result.reason === "login"
-                ? "Такой логин уже существует."
-                : result.reason === "email"
-                  ? "Эта почта уже используется."
-                  : result.reason === "login_and_email"
-                    ? "И логин, и почта уже заняты."
-                    : result.message
-                      ? `Такой аккаунт уже существует: ${result.message}`
-                      : "Такой логин или email уже занят. Если это твой аккаунт, просто войди."
+              ? "Такой логин уже занят. Если это твой аккаунт, просто войди."
               : result.message
                 ? `Регистрация не удалась: ${result.message}`
                 : "Регистрация не удалась. Попробуй ещё раз.",
@@ -69,7 +59,7 @@ function RegisterPageContent() {
 
     if (result.pendingVerification) {
       setBusy(false);
-      setSuccess("Аккаунт создан. Проверь почту и подтверди email, если Supabase требует подтверждение.");
+      setSuccess("Аккаунт создан. Подтверждение позже переведём в Telegram.");
       return;
     }
 
@@ -81,10 +71,10 @@ function RegisterPageContent() {
       <div className="mx-auto flex max-w-5xl items-center justify-center">
         <div className="grid w-full gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">Supabase Auth</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">SubReel Auth</p>
             <h1 className="mt-4 text-5xl font-black">Создать аккаунт SubReel</h1>
             <p className="mt-4 max-w-2xl text-sm text-[var(--color-text-gray)]">
-              Этот аккаунт станет общей идентичностью для сайта, лаунчера, баг-репортов, идей и будущей moderation/admin панели.
+              Аккаунт будет общим для сайта, лаунчера и будущего Telegram-подтверждения. Почту в форме больше не показываем: служебный адрес создаётся автоматически внутри системы.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 grid gap-4 md:grid-cols-2">
@@ -105,17 +95,6 @@ function RegisterPageContent() {
                   onChange={(event) => setNickname(event.target.value)}
                   className="rounded-[1.2rem] border border-[var(--color-border-sharp)] bg-white/70 px-4 py-4 text-sm outline-none transition focus:border-[var(--color-accent-blue)]"
                   placeholder="Lemansen"
-                />
-              </label>
-
-              <label className="flex flex-col gap-2 md:col-span-2">
-                <span className="text-xs font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]">Email</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="rounded-[1.2rem] border border-[var(--color-border-sharp)] bg-white/70 px-4 py-4 text-sm outline-none transition focus:border-[var(--color-accent-blue)]"
-                  placeholder="mail@example.com"
                 />
               </label>
 
@@ -151,13 +130,13 @@ function RegisterPageContent() {
           </section>
 
           <aside className="rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-8">
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">Архитектура</p>
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">Что дальше</p>
             <div className="mt-5 flex flex-col gap-4 text-sm text-[var(--color-text-gray)]">
               <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
-                Профиль пользователя хранится в Supabase Auth + user_profiles, чтобы сайт и лаунчер говорили на одном API.
+                Внутри Supabase у аккаунта всё равно остаётся служебный email для auth-механики, но пользователь его больше не вводит и не редактирует.
               </div>
               <div className="rounded-[1.2rem] border border-[var(--color-border-sharp)] px-4 py-4">
-                Позже на этой базе можно без переделки достроить друзей, чат, рейтинг, баги, идеи и moderation dashboard.
+                Следующим шагом мы сможем привязать Telegram-бота и сделать подтверждение, восстановление и связь аккаунта уже через него.
               </div>
             </div>
 
