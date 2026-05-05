@@ -9,6 +9,29 @@ function resolveNext(candidate: string | null) {
   return candidate && candidate.startsWith("/") ? candidate : "/dashboard";
 }
 
+function getRegisterErrorText(result: Awaited<ReturnType<typeof registerAccount>>) {
+  if (result.ok) {
+    return null;
+  }
+
+  if (result.error === "fill") {
+    return "Заполни все поля.";
+  }
+
+  if (result.error === "password") {
+    return "Пароль должен быть не короче 6 символов.";
+  }
+
+  if (result.error === "exists") {
+    return "Такой логин уже занят. Если это твой аккаунт, просто войди.";
+  }
+
+  const message = typeof result.message === "string" ? result.message.trim() : "";
+  return message
+    ? `Регистрация не удалась: ${message}`
+    : "Регистрация не удалась. Проверь настройки Supabase в Vercel и попробуй ещё раз.";
+}
+
 function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -43,17 +66,7 @@ function RegisterPageContent() {
 
     if (!result.ok) {
       setBusy(false);
-      setError(
-        result.error === "fill"
-          ? "Заполни все поля."
-          : result.error === "password"
-            ? "Пароль должен быть не короче 6 символов."
-            : result.error === "exists"
-              ? "Такой логин уже занят. Если это твой аккаунт, просто войди."
-              : result.message
-                ? `Регистрация не удалась: ${result.message}`
-                : "Регистрация не удалась. Попробуй ещё раз.",
-      );
+      setError(getRegisterErrorText(result));
       return;
     }
 

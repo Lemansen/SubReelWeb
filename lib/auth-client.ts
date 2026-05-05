@@ -33,10 +33,27 @@ async function parseResponse<T>(response: Response): Promise<T | null> {
   }
 }
 
+function normalizeMessage(value: unknown): string {
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (value && typeof value === "object") {
+    const nested = value as { message?: unknown; error_description?: unknown; error?: unknown };
+    return (
+      normalizeMessage(nested.message) ||
+      normalizeMessage(nested.error_description) ||
+      normalizeMessage(nested.error)
+    );
+  }
+
+  return "";
+}
+
 async function readErrorMessage(response: Response, fallback: string) {
   const result = await parseResponse<{ message?: unknown; error?: unknown }>(response);
-  const message = typeof result?.message === "string" ? result.message.trim() : "";
-  const error = typeof result?.error === "string" ? result.error.trim() : "";
+  const message = normalizeMessage(result?.message);
+  const error = normalizeMessage(result?.error);
   return message || error || fallback;
 }
 
@@ -102,7 +119,10 @@ export async function registerAccount(input: {
     }
 
     if (result && !result.ok) {
-      return result;
+      return {
+        ...result,
+        message: normalizeMessage(result.message),
+      };
     }
 
     return {
