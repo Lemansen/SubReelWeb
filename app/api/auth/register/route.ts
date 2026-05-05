@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { findProfileByEmail, findProfileByLogin, getAccountUserFromAccessToken } from "@/lib/auth-session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createInternalEmailFromLogin } from "@/lib/account-identity";
 
 export async function POST(request: Request) {
@@ -41,16 +42,35 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = await createSupabaseServerClient();
-    const { data, error } = await supabase.auth.signUp({
+    const admin = getSupabaseAdminClient();
+    const { error: createError } = await admin.auth.admin.createUser({
       email,
       password,
-      options: {
-        data: {
-          login,
-          nickname,
-        },
+      email_confirm: true,
+      user_metadata: {
+        login,
+        nickname,
       },
+    });
+
+    if (createError) {
+      if (/already|registered|exists|duplicate/i.test(createError.message)) {
+        return NextResponse.json(
+          { ok: false, error: "exists", message: "Такой логин уже занят. Если это твой аккаунт, просто войди." },
+          { status: 409 },
+        );
+      }
+
+      return NextResponse.json(
+        { ok: false, error: "unknown", message: createError.message || "Supabase не создал аккаунт." },
+        { status: 400 },
+      );
+    }
+
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
 
     if (error) {
