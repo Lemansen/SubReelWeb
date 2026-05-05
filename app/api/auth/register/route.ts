@@ -4,6 +4,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createInternalEmailFromLogin } from "@/lib/account-identity";
 
+const REGISTER_FLOW_VERSION = "admin-create-user-v2";
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as {
@@ -35,6 +37,7 @@ export async function POST(request: Request) {
         {
           ok: false,
           error: "exists",
+          flow: REGISTER_FLOW_VERSION,
           reason: loginProfile && emailProfile ? "login_and_email" : loginProfile ? "login" : "email",
           message: "Такой логин уже занят. Если это твой аккаунт, просто войди.",
         },
@@ -56,13 +59,13 @@ export async function POST(request: Request) {
     if (createError) {
       if (/already|registered|exists|duplicate/i.test(createError.message)) {
         return NextResponse.json(
-          { ok: false, error: "exists", message: "Такой логин уже занят. Если это твой аккаунт, просто войди." },
+          { ok: false, error: "exists", flow: REGISTER_FLOW_VERSION, message: "Такой логин уже занят. Если это твой аккаунт, просто войди." },
           { status: 409 },
         );
       }
 
       return NextResponse.json(
-        { ok: false, error: "unknown", message: createError.message || "Supabase не создал аккаунт." },
+        { ok: false, error: "unknown", flow: REGISTER_FLOW_VERSION, message: createError.message || "Supabase не создал аккаунт." },
         { status: 400 },
       );
     }
@@ -76,23 +79,23 @@ export async function POST(request: Request) {
     if (error) {
       if (/already|registered|exists/i.test(error.message)) {
         return NextResponse.json(
-          { ok: false, error: "exists", message: "Такой логин уже занят. Если это твой аккаунт, просто войди." },
+          { ok: false, error: "exists", flow: REGISTER_FLOW_VERSION, message: "Такой логин уже занят. Если это твой аккаунт, просто войди." },
           { status: 409 },
         );
       }
 
       return NextResponse.json(
-        { ok: false, error: "unknown", message: error.message || "Supabase не принял регистрацию." },
+        { ok: false, error: "unknown", flow: REGISTER_FLOW_VERSION, message: error.message || "Supabase не принял регистрацию." },
         { status: 400 },
       );
     }
 
     if (!data.session?.access_token) {
-      return NextResponse.json({ ok: true, user: null, pendingVerification: true });
+      return NextResponse.json({ ok: true, flow: REGISTER_FLOW_VERSION, user: null, pendingVerification: true });
     }
 
     const user = await getAccountUserFromAccessToken(data.session.access_token);
-    const response = NextResponse.json({ ok: true, user, pendingVerification: false });
+    const response = NextResponse.json({ ok: true, flow: REGISTER_FLOW_VERSION, user, pendingVerification: false });
 
     return response;
   } catch (error) {
@@ -103,6 +106,7 @@ export async function POST(request: Request) {
       {
         ok: false,
         error: "unknown",
+        flow: REGISTER_FLOW_VERSION,
         message: isEnvError
           ? "На сервере не настроены переменные Supabase. Проверь NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY и SUPABASE_SERVICE_ROLE_KEY в Vercel."
           : message,
