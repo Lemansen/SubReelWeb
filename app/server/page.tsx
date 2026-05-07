@@ -21,6 +21,9 @@ import {
   ArrowRight,
   Menu,
   X,
+  Globe,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -40,19 +43,23 @@ const content = {
     hero_title_2: "Сплочённость.",
     hero_title_3: "Разносторонность.",
     hero_subtitle:
-      "Subreel - это приватный сервер Minecraft с необычным геймплеем! Перед началом игры нужно подать заявку в Discord.",
+      "Subreel — приватный сервер Minecraft с необычным геймплеем. Перед началом игры нужно подать заявку в Discord.",
 
     status_online: "В сети",
+    status_offline: "Офлайн",
+    status_loading: "Загрузка",
     status_players: "Игроков",
-    status_version: "Версия 1.20.1",
+    status_version: "Версия",
     ip_label: "Адрес сервера",
     copy_ip: "Копировать IP",
     copied: "Скопировано!",
     join_btn: "Присоединиться",
+    updated: "Обновлено",
 
     wiki_title: "Википедия Subreel",
     wiki_subtitle: "Важно к прочтению",
     wiki_read_more: "Читать дальше",
+    wiki_all: "Все статьи",
 
     wiki_cards: [
       { title: "Территории", tag: "Геймплей", desc: "Не придется больше ставить таблички и писать в ДС свою территорию." },
@@ -72,17 +79,25 @@ const content = {
     mods_title_2: "Эмоции",
     mods_desc_2: "Мод позволит вам ярко выражать свои эмоции на сервере, делая игру ещё атмосфернее.",
 
-    faq_title: "Вопрос – Ответ & FAQ",
+    faq_title: "Часто задаваемые вопросы",
+    faq_subtitle: "Вопрос — Ответ",
     faq_cards: [
       { q: "Какое ядро?", a: "Мы используем оптимизированный форк, который исправляет ошибки и вносит улучшения в производительность." },
       { q: "Какой радиус деспавна?", a: "Полезно знать тем, у кого есть фермы. Радиус уменьшен для оптимизации TPS." },
       { q: "Характеристики VDS?", a: "Intel Core i9-13900K, 128GB DDR5 RAM, NVMe SSD Raid 1. Локация: Германия." },
+      { q: "Нужна ли лицензия?", a: "Лицензия не обязательна, но даёт дополнительные возможности — например, вход без пароля." },
+      { q: "Как подать заявку?", a: "Зайдите в наш Discord и следуйте инструкции в канале #заявки. Это быстро и просто." },
     ],
 
     access_title: "Доступ на Subreel",
     access_desc: "Наш сервер — это чистый Minecraft без лишних плагинов и привилегий. Присоединиться могут все желающие.",
-    access_cost: "СТОИМОСТЬ ДОСТУПА",
+    access_cost: "Стоимость доступа",
     access_free: "БЕСПЛАТНО",
+    access_perks: [
+      "Без доната и привилегий",
+      "Приватный — по заявке",
+      "Честная игра для всех",
+    ],
 
     rules_btn: "Правила",
 
@@ -98,24 +113,28 @@ const content = {
     about: "About Us",
 
     badge_version: "1.20.1 · Java Edition",
-    badge_started: "Started 15.08.2023",
+    badge_started: "Started 10.03.2026",
 
     hero_title_1: "Dynamics.",
     hero_title_2: "Cohesion.",
     hero_title_3: "Versatility.",
-    hero_subtitle: "Subreel is a private Minecraft server with unique gameplay! You must apply in Discord before playing.",
+    hero_subtitle: "Subreel is a private Minecraft server with unique gameplay. You must apply in Discord before playing.",
 
     status_online: "Online",
+    status_offline: "Offline",
+    status_loading: "Loading",
     status_players: "Players",
-    status_version: "Version 1.20.1",
+    status_version: "Version",
     ip_label: "Server Address",
     copy_ip: "Copy IP",
     copied: "Copied!",
     join_btn: "Join Now",
+    updated: "Updated",
 
     wiki_title: "Subreel Wiki",
     wiki_subtitle: "Important to read",
     wiki_read_more: "Read more",
+    wiki_all: "All articles",
 
     wiki_cards: [
       { title: "Territories", tag: "Gameplay", desc: "No need to place signs and write your territory in Discord anymore." },
@@ -135,17 +154,25 @@ const content = {
     mods_title_2: "Emotes",
     mods_desc_2: "The mod allows you to express your emotions brightly on the server, making the game even more atmospheric.",
 
-    faq_title: "Q&A & FAQ",
+    faq_title: "Frequently Asked Questions",
+    faq_subtitle: "Q & A",
     faq_cards: [
       { q: "What core do you use?", a: "We use an optimized fork that fixes bugs and brings performance improvements." },
       { q: "Mob despawn radius?", a: "Useful for farm builders. The radius is reduced for TPS optimization." },
       { q: "VDS Specs?", a: "Intel Core i9-13900K, 128GB DDR5 RAM, NVMe SSD Raid 1. Location: Germany." },
+      { q: "Is a license required?", a: "A license is not required, but it unlocks extra features like passwordless login." },
+      { q: "How to apply?", a: "Join our Discord and follow the instructions in the #applications channel. It's quick and easy." },
     ],
 
     access_title: "Access to Subreel",
     access_desc: "Our server is pure Minecraft without unnecessary plugins and privileges. Everyone can join.",
-    access_cost: "ACCESS COST",
+    access_cost: "Access Cost",
     access_free: "FREE",
+    access_perks: [
+      "No donations or privileges",
+      "Private — apply to join",
+      "Fair play for everyone",
+    ],
 
     rules_btn: "Rules",
 
@@ -164,11 +191,22 @@ type LiveStatus = {
   updatedAt: string;
 };
 
+// Tag colour mapping for wiki cards
+const tagColors: Record<string, string> = {
+  "Геймплей": "bg-blue-500/15 text-blue-400 border border-blue-500/20",
+  "Gameplay": "bg-blue-500/15 text-blue-400 border border-blue-500/20",
+  "Основное": "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+  "Basics": "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20",
+  "Аккаунт": "bg-purple-500/15 text-purple-400 border border-purple-500/20",
+  "Account": "bg-purple-500/15 text-purple-400 border border-purple-500/20",
+};
+
 export default function ServerPage() {
   const [lang, setLang] = useState<"RU" | "EN">("RU");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -184,28 +222,17 @@ export default function ServerPage() {
 
   useEffect(() => {
     let cancelled = false;
-
     async function loadStatus() {
       try {
-        const response = await fetch("/api/server-status", {
-          method: "GET",
-          cache: "no-store",
-        });
-
+        const response = await fetch("/api/server-status", { method: "GET", cache: "no-store" });
         const result = (await response.json()) as {
-          online?: boolean;
-          version?: string;
-          playersOnline?: number;
-          playersMax?: number;
-          motd?: string;
-          tps?: string;
-          updatedAt?: string;
+          online?: boolean; version?: string; playersOnline?: number;
+          playersMax?: number; motd?: string; tps?: string; updatedAt?: string;
         };
-
         if (!cancelled) {
           setLiveStatus({
             online: Boolean(result.online),
-            version: result.version ?? "1.21.11",
+            version: result.version ?? "1.20.1",
             playersOnline: result.playersOnline ?? 0,
             playersMax: result.playersMax ?? 0,
             motd: result.motd ?? "",
@@ -216,55 +243,36 @@ export default function ServerPage() {
       } catch {
         if (!cancelled) {
           setLiveStatus({
-            online: false,
-            version: "1.21.11",
-            playersOnline: 0,
-            playersMax: 0,
-            motd: "",
-            tps: "--",
-            updatedAt: new Date().toISOString(),
+            online: false, version: "1.20.1", playersOnline: 0,
+            playersMax: 0, motd: "", tps: "--", updatedAt: new Date().toISOString(),
           });
         }
       }
     }
-
     loadStatus();
     const interval = setInterval(loadStatus, 60000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
+    return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
-  const playersValue = liveStatus
-    ? `${liveStatus.playersOnline} / ${liveStatus.playersMax || "?"}`
-    : "-- / --";
+  const playersValue = liveStatus ? `${liveStatus.playersOnline} / ${liveStatus.playersMax || "?"}` : "-- / --";
   const onlineValue = liveStatus
-    ? liveStatus.online
-      ? lang === "RU"
-        ? "Онлайн"
-        : "Online"
-      : lang === "RU"
-        ? "Офлайн"
-        : "Offline"
-    : lang === "RU"
-      ? "Загрузка"
-      : "Loading";
+    ? liveStatus.online ? t.status_online : t.status_offline
+    : t.status_loading;
+  const isOnline = liveStatus?.online ?? false;
   const motdValue = liveStatus?.motd ? liveStatus.motd : "Subreel";
-  const versionValue = liveStatus?.version ?? "1.21.11";
+  const versionValue = liveStatus?.version ?? "1.20.1";
   const tpsValue = liveStatus?.tps ?? "--";
   const updatedLabel = liveStatus?.updatedAt
-    ? new Date(liveStatus.updatedAt).toLocaleTimeString(lang === "RU" ? "ru-RU" : "en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
+    ? new Date(liveStatus.updatedAt).toLocaleTimeString(lang === "RU" ? "ru-RU" : "en-US", { hour: "2-digit", minute: "2-digit" })
     : "--:--";
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] transition-colors">
-      <nav className="border-b border-[var(--color-border-sharp)] sticky top-0 bg-[var(--color-bg)]/70 backdrop-blur-md z-50">
+
+      {/* ── NAV ── */}
+      <nav className="border-b border-[var(--color-border-sharp)] sticky top-0 bg-[var(--color-bg)]/80 backdrop-blur-lg z-50">
         <div className="max-w-7xl mx-auto px-4 md:px-6 min-h-16 py-3 md:py-0 flex flex-wrap md:flex-nowrap items-center justify-between gap-3 relative">
+
           <div className="flex items-center gap-3 md:gap-6 w-auto md:w-1/3 min-w-0">
             <button
               onClick={() => router.back()}
@@ -277,7 +285,7 @@ export default function ServerPage() {
             </Link>
           </div>
 
-          <div className="hidden md:flex order-3 md:order-none w-full md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2 items-center justify-center gap-3 md:gap-8 overflow-x-auto">
+          <div className="hidden md:flex order-3 md:order-none w-full md:w-auto md:absolute md:left-1/2 md:-translate-x-1/2 items-center justify-center gap-8">
             {[
               { name: t.nav_home, path: "/" },
               { name: t.nav_launcher, path: "/launcher" },
@@ -288,9 +296,7 @@ export default function ServerPage() {
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all relative py-2 ${
-                    isActive ? "text-[var(--color-accent-blue)]" : "text-[var(--color-text-gray)] hover:text-[var(--color-text)]"
-                  }`}
+                  className={`text-xs font-bold uppercase tracking-[0.2em] transition-all relative py-5 ${isActive ? "text-[var(--color-accent-blue)]" : "text-[var(--color-text-gray)] hover:text-[var(--color-text)]"}`}
                 >
                   {item.name}
                   {isActive && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[var(--color-accent-blue)] rounded-full" />}
@@ -303,30 +309,36 @@ export default function ServerPage() {
             <div className="flex items-center gap-1 bg-[var(--color-panel-bg)] p-1 rounded-xl border border-[var(--color-border-sharp)] shadow-sm">
               <Link
                 href="/wiki"
-                className="flex items-center gap-1.5 px-2 md:px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-sm font-bold uppercase transition-colors group"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-sm font-bold uppercase transition-colors group"
               >
                 <BookOpen size={14} className="text-[var(--color-text-gray)] group-hover:text-[var(--color-accent-blue)] transition-colors" />
-                <span className="hidden sm:block text-[var(--color-text-gray)] group-hover:text-[var(--color-text)] transition-colors">{t.nav_wiki}</span>
+                <span className="text-[var(--color-text-gray)] group-hover:text-[var(--color-text)] transition-colors">{t.nav_wiki}</span>
               </Link>
-
               <div className="w-px h-4 bg-[var(--color-border-sharp)] mx-0.5" />
-
               <button
                 onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
-                className="px-2 md:px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-[10px] md:text-sm font-bold uppercase text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-[var(--color-panel-hover)] text-sm font-bold uppercase text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors"
               >
+                <Globe size={13} />
                 {lang}
               </button>
-
-              <ThemeToggle className="p-1.5 md:p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
+              <div className="w-px h-4 bg-[var(--color-border-sharp)] mx-0.5" />
+              <ThemeToggle className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
             </div>
           </div>
 
-          <div className="md:hidden ml-auto flex items-center gap-2">
+          {/* Mobile right controls */}
+          <div className="flex md:hidden items-center gap-2 ml-auto">
             <button
-              type="button"
-              onClick={() => setMobileMenuOpen((value) => !value)}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] text-[var(--color-text)]"
+              onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
+              className="px-2.5 py-1.5 rounded-lg border border-[var(--color-border-sharp)] text-[10px] font-black uppercase text-[var(--color-text-gray)]"
+            >
+              {lang}
+            </button>
+            <ThemeToggle className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] transition-colors" />
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors border border-[var(--color-border-sharp)]"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
@@ -334,280 +346,322 @@ export default function ServerPage() {
           </div>
 
           {mobileMenuOpen && (
-            <div className="md:hidden order-4 w-full rounded-[1.5rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-3 shadow-lg">
-              <div className="grid gap-2">
-                <Link href="/" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
-                  {t.nav_home}
-                </Link>
-                <Link href="/launcher" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
-                  {t.nav_launcher}
-                </Link>
-                <Link href="/server" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
-                  {t.nav_server}
-                </Link>
-                <Link href="/mobile" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
-                  Mobile
-                </Link>
-                <Link href="/wiki" onClick={() => setMobileMenuOpen(false)} className="rounded-xl px-3 py-3 text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text)]">
-                  {t.nav_wiki}
-                </Link>
-              </div>
-              <div className="mt-3 flex items-center justify-between rounded-xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] px-3 py-2">
-                <button
-                  onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
-                  className="text-sm font-black uppercase tracking-[0.16em] text-[var(--color-text-gray)]"
+            <div className="md:hidden order-4 w-full rounded-2xl border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-2 shadow-xl mt-1">
+              {[
+                { name: t.nav_home, path: "/" },
+                { name: t.nav_launcher, path: "/launcher" },
+                { name: t.nav_server, path: "/server" },
+                { name: "Mobile", path: "/mobile" },
+                { name: t.nav_wiki, path: "/wiki" },
+              ].map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center rounded-xl px-4 py-3 text-sm font-black uppercase tracking-[0.14em] transition-colors ${pathname === item.path ? "text-[var(--color-accent-blue)] bg-[var(--color-accent-blue)]/8" : "text-[var(--color-text)] hover:bg-[var(--color-panel-hover)]"}`}
                 >
-                  {lang}
-                </button>
-                <ThemeToggle className="p-2 rounded-lg hover:bg-[var(--color-panel-hover)] text-[var(--color-text-gray)] hover:text-[var(--color-text)] transition-colors" />
-              </div>
+                  {item.name}
+                </Link>
+              ))}
             </div>
           )}
         </div>
       </nav>
 
-      <section className="relative pt-14 md:pt-20 pb-14 md:pb-20 px-4 md:px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:40px_40px] opacity-[0.05] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+      {/* ── HERO ── */}
+      <section className="relative pt-14 md:pt-24 pb-14 md:pb-24 px-4 md:px-6 overflow-hidden">
+        {/* Dot grid bg */}
+        <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:36px_36px] opacity-[0.045] [mask-image:radial-gradient(ellipse_60%_60%_at_50%_40%,#000_60%,transparent_100%)]" />
+        {/* Glow blob */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 md:gap-16 items-center">
+          {/* LEFT: Text + buttons */}
           <div className="text-center lg:text-left">
             <div className="flex flex-wrap justify-center lg:justify-start gap-2 mb-8">
-              <div className="text-[12px] font-bold rounded-lg px-3 py-1.5 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg px-3 py-1.5 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] uppercase tracking-wider border border-[var(--color-accent-blue)]/20">
                 {t.badge_version}
-              </div>
-              <div className="text-[12px] font-bold rounded-lg px-3 py-1.5 bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] uppercase tracking-wider">
+              </span>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-lg px-3 py-1.5 bg-[var(--color-panel-bg)] text-[var(--color-text-gray)] uppercase tracking-wider border border-[var(--color-border-sharp)]">
                 {t.badge_started}
-              </div>
+              </span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-[1000] tracking-[-0.04em] mb-6 uppercase italic leading-[0.95] md:leading-[0.9] text-balance">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-[1000] tracking-[-0.04em] mb-6 uppercase italic leading-[0.92] text-balance">
               <div className="text-[var(--color-text)]">{t.hero_title_1}</div>
               <div className="text-[var(--color-text)]">{t.hero_title_2}</div>
               <div className="text-[var(--color-accent-blue)]">{t.hero_title_3}</div>
             </h1>
 
-            <p className="text-lg text-[var(--color-text-gray)] mb-10 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
+            <p className="text-base md:text-lg text-[var(--color-text-gray)] mb-8 font-medium leading-relaxed max-w-xl mx-auto lg:mx-0">
               {t.hero_subtitle}
             </p>
 
-            <div className="flex flex-wrap justify-center lg:justify-start gap-4">
+            {/* CTA buttons – mobile: 2 col grid */}
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap justify-center lg:justify-start gap-3 mb-8">
               <a
                 href="https://discord.gg/t7bjdm9uDC"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 active:scale-95 shadow-[0_10px_30px_-10px_rgba(59,130,246,0.5)]"
+                className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 bg-[var(--color-accent-blue)] text-white px-6 py-3.5 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 active:scale-95 shadow-[0_8px_24px_-8px_rgba(59,130,246,0.55)] text-sm"
               >
-                {t.join_btn} <ExternalLink size={20} strokeWidth={3} />
+                {t.join_btn} <ExternalLink size={16} strokeWidth={3} />
               </a>
 
               <button
                 onClick={copyToClipboard}
-                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-5 py-3.5 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95 text-sm"
               >
-                {copied ? <CheckCircle2 size={20} className="text-emerald-500" strokeWidth={3} /> : <Copy size={20} strokeWidth={3} />}
+                {copied ? <CheckCircle2 size={16} className="text-emerald-500" strokeWidth={3} /> : <Copy size={16} strokeWidth={3} />}
                 {copied ? t.copied : t.copy_ip}
               </button>
 
               <Link
                 href="/wiki"
-                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-5 py-3.5 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95 text-sm"
               >
-                <BookOpen size={20} strokeWidth={3} />
+                <BookOpen size={16} strokeWidth={3} />
                 {t.rules_btn}
               </Link>
 
               <Link
                 href="/stats"
-                className="flex items-center gap-3 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-6 md:px-8 py-4 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95"
+                className="flex items-center justify-center gap-2 bg-[var(--color-panel-bg)] text-[var(--color-text)] border border-[var(--color-border-sharp)] px-5 py-3.5 rounded-xl font-black uppercase italic tracking-wider hover:bg-[var(--color-panel-hover)] transition-all active:scale-95 text-sm"
               >
-                <BarChart3 size={20} strokeWidth={3} />
-                Статистика
+                <BarChart3 size={16} strokeWidth={3} />
+                {lang === "RU" ? "Статистика" : "Stats"}
               </Link>
             </div>
 
-            <div className="mt-6 rounded-[1.5rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)]/80 backdrop-blur-sm p-4 md:p-5 max-w-xl mx-auto lg:mx-0">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <div className="text-[10px] uppercase font-black tracking-[0.22em] text-[var(--color-text-gray)]">
-                    {t.ip_label}
-                  </div>
-                  <div className="mt-1 text-lg md:text-xl font-black tracking-tight text-[var(--color-accent-blue)] break-all">
-                    {serverIP}
-                  </div>
-                  <div className="mt-2 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-[var(--color-text-gray)]">
+            {/* IP card */}
+            <div className="rounded-2xl border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)]/80 backdrop-blur-sm p-4 max-w-xl mx-auto lg:mx-0">
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase font-black tracking-[0.22em] text-[var(--color-text-gray)] mb-1">{t.ip_label}</div>
+                  <div className="text-lg font-black tracking-tight text-[var(--color-accent-blue)] truncate">{serverIP}</div>
+                  <div className="mt-2 inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--color-text-gray)]">
                     <span
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        liveStatus?.online ? "bg-emerald-500 shadow-[0_0_12px_rgba(34,197,94,0.8)]" : "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.7)]"
-                      }`}
+                      className={`h-2 w-2 rounded-full flex-shrink-0 ${isOnline ? "bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.7)]" : "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]"}`}
                     />
                     {onlineValue}
                   </div>
                 </div>
-                <div className="text-left sm:text-right">
-                  <div className="text-[10px] uppercase font-black tracking-[0.22em] text-[var(--color-text-gray)]">
-                    {lang === "RU" ? "Обновлено" : "Updated"}
-                  </div>
-                  <div className="mt-1 text-sm font-bold text-[var(--color-text)]">
-                    {updatedLabel}
-                  </div>
+                <div className="text-right flex-shrink-0">
+                  <div className="text-[10px] uppercase font-black tracking-[0.22em] text-[var(--color-text-gray)] mb-1">{t.updated}</div>
+                  <div className="text-sm font-bold text-[var(--color-text)]">{updatedLabel}</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:gap-6">
-            <StatCard icon={<Users size={32} />} value={playersValue} label={t.status_players} color="blue" />
-            <StatCard icon={<Zap size={32} />} value={tpsValue} label="TPS" color="emerald" />
-            <StatCard icon={<ShieldCheck size={32} />} value={motdValue} label="MOTD" color="purple" />
-            <StatCard icon={<Network size={32} />} value={versionValue} label={t.status_version} color="orange" />
+          {/* RIGHT: Stat cards – 2×2 grid */}
+          <div className="grid grid-cols-2 gap-3 md:gap-4">
+            <StatCard
+              icon={<Users size={26} strokeWidth={2} />}
+              value={playersValue}
+              label={t.status_players}
+              color="blue"
+              pulse={isOnline}
+            />
+            <StatCard
+              icon={<Zap size={26} strokeWidth={2} />}
+              value={tpsValue}
+              label="TPS"
+              color="emerald"
+              pulse={isOnline}
+            />
+            <StatCard
+              icon={<ShieldCheck size={26} strokeWidth={2} />}
+              value={motdValue}
+              label="MOTD"
+              color="purple"
+            />
+            <StatCard
+              icon={<Network size={26} strokeWidth={2} />}
+              value={versionValue}
+              label={t.status_version}
+              color="orange"
+            />
           </div>
         </div>
       </section>
 
-      <section className="px-4 md:px-6 py-16 md:py-20 relative">
+      {/* ── WIKI ── */}
+      <section className="px-4 md:px-6 py-14 md:py-20 relative">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] rounded-[2.5rem] p-8 md:p-12">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter text-[var(--color-text)]">{t.wiki_title}</h2>
-              <p className="text-[var(--color-text-gray)] font-bold uppercase tracking-widest mt-2">{t.wiki_subtitle}</p>
+          <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] rounded-[2rem] p-6 md:p-12">
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 md:mb-10">
+              <div>
+                <p className="text-[10px] uppercase font-black tracking-[0.3em] text-[var(--color-accent-blue)] mb-2">{t.wiki_subtitle}</p>
+                <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter text-[var(--color-text)]">{t.wiki_title}</h2>
+              </div>
+              <Link
+                href="/wiki"
+                className="inline-flex items-center gap-2 bg-[var(--color-bg)] border border-[var(--color-border-sharp)] px-5 py-3 rounded-xl font-black uppercase italic tracking-wider text-sm text-[var(--color-text-gray)] hover:border-[var(--color-accent-blue)] hover:text-[var(--color-accent-blue)] transition-colors self-start sm:self-auto"
+              >
+                <BookOpen size={15} strokeWidth={2.5} />
+                {t.wiki_all}
+              </Link>
             </div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
               {t.wiki_cards.map((card, idx) => (
-                <Link key={idx} href="/wiki" className="bg-[var(--color-bg)] border border-[var(--color-border-sharp)] hover:border-[var(--color-accent-blue)] transition-all rounded-[1.5rem] p-6 flex flex-col justify-between gap-6 group">
+                <Link
+                  key={idx}
+                  href="/wiki"
+                  className="bg-[var(--color-bg)] border border-[var(--color-border-sharp)] hover:border-[var(--color-accent-blue)] hover:shadow-[0_8px_32px_-12px_rgba(59,130,246,0.3)] transition-all duration-200 rounded-2xl p-5 flex flex-col justify-between gap-4 group"
+                >
                   <div>
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="font-black italic text-xl uppercase tracking-tight">{card.title}</h3>
-                      <span className="bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-[10px] font-bold uppercase px-3 py-1.5 rounded-md">
+                    <div className="flex justify-between items-start gap-3 mb-3">
+                      <h3 className="font-black italic text-base uppercase tracking-tight leading-tight">{card.title}</h3>
+                      <span className={`flex-shrink-0 text-[10px] font-bold uppercase px-2.5 py-1 rounded-lg ${tagColors[card.tag] ?? "bg-[var(--color-panel-bg)] text-[var(--color-text-gray)]"}`}>
                         {card.tag}
                       </span>
                     </div>
                     <p className="text-sm text-[var(--color-text-gray)] font-medium leading-relaxed">{card.desc}</p>
                   </div>
-                  <div className="flex items-center gap-2 text-[var(--color-accent-blue)] text-xs font-bold uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                    {t.wiki_read_more} <ArrowRight size={14} strokeWidth={3} />
+                  <div className="flex items-center gap-1.5 text-[var(--color-accent-blue)] text-[11px] font-bold uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+                    {t.wiki_read_more} <ArrowRight size={13} strokeWidth={3} />
                   </div>
                 </Link>
               ))}
             </div>
-
-            <div className="mt-8 flex justify-center">
-              <Link
-                href="/wiki"
-                className="inline-flex items-center gap-3 bg-[var(--color-bg)] border border-[var(--color-border-sharp)] px-6 py-4 rounded-xl font-black uppercase italic tracking-wider text-[var(--color-text)] hover:border-[var(--color-accent-blue)] hover:text-[var(--color-accent-blue)] transition-colors"
-              >
-                <BookOpen size={18} strokeWidth={2.5} />
-                {t.wiki_read_more}
-              </Link>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="px-4 md:px-6 py-8 md:py-10 relative">
+      {/* ── MAP ── */}
+      <section className="px-4 md:px-6 py-6 md:py-8 relative">
         <div className="max-w-7xl mx-auto">
-          <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-r from-[var(--color-panel-bg)] to-[var(--color-accent-blue)]/10 border border-[var(--color-border-sharp)] flex flex-col md:flex-row items-center justify-between p-6 md:p-16 gap-8">
+          <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-r from-[var(--color-panel-bg)] to-[var(--color-accent-blue)]/10 border border-[var(--color-border-sharp)] flex flex-col md:flex-row items-center justify-between p-6 md:p-14 gap-8">
             <div className="relative z-10 max-w-xl text-center md:text-left">
-              <div className="bg-[var(--color-accent-blue)]/20 text-[var(--color-accent-blue)] inline-block px-4 py-2 rounded-lg text-xs font-black uppercase tracking-widest mb-6">
+              <div className="bg-[var(--color-accent-blue)]/20 text-[var(--color-accent-blue)] inline-block px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest mb-5">
                 Squaremap
               </div>
-              <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-4 leading-none">
+              <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter mb-3 leading-tight">
                 {t.map_title}
               </h2>
-              <p className="text-[var(--color-text-gray)] font-medium text-lg mb-8 leading-relaxed">
+              <p className="text-[var(--color-text-gray)] font-medium text-base mb-7 leading-relaxed">
                 {t.map_desc}
               </p>
-              <Link href="http://mc.subreel.online:21168/" className="inline-flex items-center gap-3 bg-[var(--color-accent-blue)] text-white px-8 py-4 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 hover:scale-105 active:scale-95 shadow-lg">
-                <MapIcon size={20} strokeWidth={3} /> {t.map_btn}
+              <Link href="http://mc.subreel.online:21168/" className="inline-flex items-center gap-2 bg-[var(--color-accent-blue)] text-white px-7 py-3.5 rounded-xl font-black uppercase italic tracking-wider transition-all hover:bg-blue-600 hover:scale-105 active:scale-95 shadow-lg text-sm">
+                <MapIcon size={17} strokeWidth={3} /> {t.map_btn}
               </Link>
             </div>
-            <div className="relative w-full md:w-1/2 h-64 md:h-auto flex items-center justify-center opacity-50 pointer-events-none">
-              <MapIcon size={200} className="text-[var(--color-accent-blue)]" strokeWidth={0.5} />
+            <div className="hidden md:flex relative w-1/2 h-48 items-center justify-center opacity-40 pointer-events-none">
+              <MapIcon size={180} className="text-[var(--color-accent-blue)]" strokeWidth={0.5} />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="px-4 md:px-6 py-8 md:py-10 relative">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-6">
-          <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-10 md:p-12 rounded-[2.5rem] flex flex-col justify-between">
+      {/* ── MODS ── */}
+      <section className="px-4 md:px-6 py-6 md:py-8 relative">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-4">
+          <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-7 md:p-10 rounded-[2rem] flex flex-col justify-between gap-4 hover:border-orange-500/40 transition-colors">
             <div>
-              <div className="w-14 h-14 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-6">
-                <MessageSquare size={28} strokeWidth={2.5} />
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-orange-500 flex items-center justify-center mb-5">
+                <MessageSquare size={24} strokeWidth={2.5} />
               </div>
-              <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4">{t.mods_title_1}</h3>
-              <p className="text-[var(--color-text-gray)] font-medium text-lg leading-relaxed">{t.mods_desc_1}</p>
+              <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-3">{t.mods_title_1}</h3>
+              <p className="text-[var(--color-text-gray)] font-medium text-base leading-relaxed">{t.mods_desc_1}</p>
             </div>
           </div>
-
-          <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-10 md:p-12 rounded-[2.5rem] flex flex-col justify-between">
+          <div className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-7 md:p-10 rounded-[2rem] flex flex-col justify-between gap-4 hover:border-purple-500/40 transition-colors">
             <div>
-              <div className="w-14 h-14 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-6">
-                <Smile size={28} strokeWidth={2.5} />
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center mb-5">
+                <Smile size={24} strokeWidth={2.5} />
               </div>
-              <h3 className="text-3xl font-black uppercase italic tracking-tighter mb-4">{t.mods_title_2}</h3>
-              <p className="text-[var(--color-text-gray)] font-medium text-lg leading-relaxed">{t.mods_desc_2}</p>
+              <h3 className="text-2xl font-black uppercase italic tracking-tighter mb-3">{t.mods_title_2}</h3>
+              <p className="text-[var(--color-text-gray)] font-medium text-base leading-relaxed">{t.mods_desc_2}</p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="px-4 md:px-6 py-16 md:py-20 bg-white/[0.02] border-y border-[var(--color-border-sharp)]">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-12 text-center">
-            {t.faq_title}
-          </h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {t.faq_cards.map((faq, idx) => (
-              <div key={idx} className="bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] p-6 md:p-8 rounded-[2rem] hover:border-[var(--color-accent-blue)] hover:shadow-[0_20px_40px_-24px_rgba(59,130,246,0.35)] transition-all">
-                <div className="flex items-center justify-between gap-4 mb-6">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--color-bg)] flex items-center justify-center text-[var(--color-text-gray)]">
-                    <HelpCircle size={24} strokeWidth={2.5} />
+      {/* ── FAQ ── */}
+      <section className="px-4 md:px-6 py-14 md:py-20 bg-white/[0.02] border-y border-[var(--color-border-sharp)]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10 md:mb-14">
+            <p className="text-[10px] uppercase font-black tracking-[0.3em] text-[var(--color-accent-blue)] mb-3">{t.faq_subtitle}</p>
+            <h2 className="text-2xl md:text-4xl font-black uppercase italic tracking-tighter">{t.faq_title}</h2>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {t.faq_cards.map((faq, idx) => {
+              const isOpen = openFaq === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setOpenFaq(isOpen ? null : idx)}
+                  className={`w-full text-left bg-[var(--color-panel-bg)] border rounded-2xl p-5 md:p-6 transition-all ${isOpen ? "border-[var(--color-accent-blue)] shadow-[0_8px_32px_-12px_rgba(59,130,246,0.25)]" : "border-[var(--color-border-sharp)] hover:border-[var(--color-accent-blue)]/50"}`}
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent-blue)] flex-shrink-0 w-6 text-center">
+                        {String(idx + 1).padStart(2, "0")}
+                      </span>
+                      <h3 className="text-base font-black uppercase italic tracking-tight">{faq.q}</h3>
+                    </div>
+                    <div className={`flex-shrink-0 transition-transform ${isOpen ? "rotate-0" : ""}`}>
+                      {isOpen
+                        ? <ChevronUp size={18} className="text-[var(--color-accent-blue)]" strokeWidth={2.5} />
+                        : <ChevronDown size={18} className="text-[var(--color-text-gray)]" strokeWidth={2.5} />
+                      }
+                    </div>
                   </div>
-                  <div className="text-[10px] font-black uppercase tracking-[0.22em] text-[var(--color-accent-blue)]">
-                    0{idx + 1}
-                  </div>
-                </div>
-                <h3 className="text-xl font-black uppercase italic tracking-tight mb-4">{faq.q}</h3>
-                <p className="text-[var(--color-text-gray)] font-medium leading-relaxed">{faq.a}</p>
-              </div>
-            ))}
+                  {isOpen && (
+                    <div className="mt-4 pl-10 text-[var(--color-text-gray)] font-medium text-sm leading-relaxed text-left">
+                      {faq.a}
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="px-4 md:px-6 py-18 md:py-24 relative overflow-hidden">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-black uppercase italic tracking-tighter mb-6">
+      {/* ── ACCESS ── */}
+      <section className="px-4 md:px-6 py-16 md:py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:36px_36px] opacity-[0.03] [mask-image:radial-gradient(ellipse_50%_80%_at_50%_50%,#000_60%,transparent_100%)]" />
+        <div className="max-w-2xl mx-auto text-center relative">
+          <p className="text-[10px] uppercase font-black tracking-[0.3em] text-[var(--color-accent-blue)] mb-4">{t.access_cost}</p>
+          <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-tighter mb-4">
             {t.access_title}
           </h2>
-          <p className="text-lg md:text-xl text-[var(--color-text-gray)] font-medium mb-12">
+          <p className="text-base md:text-lg text-[var(--color-text-gray)] font-medium mb-10">
             {t.access_desc}
           </p>
 
-          <div className="bg-gradient-to-br from-[var(--color-accent-blue)] to-blue-800 p-1 rounded-[3rem]">
-            <div className="bg-[var(--color-bg)] rounded-[2.8rem] py-16 px-8 relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="text-[var(--color-text-gray)] font-bold uppercase tracking-widest text-sm mb-4">
-                  {t.access_cost}
-                </div>
-                <div className="text-6xl md:text-8xl font-[1000] italic uppercase tracking-tighter text-[var(--color-accent-blue)]">
-                  {t.access_free}
-                </div>
+          <div className="bg-gradient-to-br from-[var(--color-accent-blue)] to-blue-800 p-px rounded-[2.5rem]">
+            <div className="bg-[var(--color-bg)] rounded-[2.45rem] py-12 px-6 md:px-12">
+              <div className="text-6xl md:text-8xl font-[1000] italic uppercase tracking-tighter text-[var(--color-accent-blue)] mb-8">
+                {t.access_free}
+              </div>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                {t.access_perks.map((perk, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-[var(--color-panel-bg)] border border-[var(--color-border-sharp)] px-4 py-2 rounded-xl">
+                    <CheckCircle2 size={14} className="text-emerald-500" strokeWidth={3} />
+                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-text-gray)]">{perk}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </section>
 
+      {/* ── FOOTER ── */}
       <footer className="py-10 mt-auto bg-[var(--color-bg)] border-t border-[var(--color-border-sharp)]">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col sm:flex-row justify-between items-center gap-8 text-center sm:text-left">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 flex flex-col sm:flex-row justify-between items-center gap-6 text-center sm:text-left">
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-center sm:justify-start gap-2">
-              <div className="w-8 h-8 bg-[var(--color-accent-blue)] rounded-lg flex items-center justify-center text-white font-bold italic">S</div>
-              <span className="font-bold text-xl tracking-tight uppercase italic text-[var(--color-accent-blue)]">Subreel Studio</span>
+              <div className="w-8 h-8 bg-[var(--color-accent-blue)] rounded-lg flex items-center justify-center text-white font-bold italic text-sm">S</div>
+              <span className="font-bold text-lg tracking-tight uppercase italic text-[var(--color-accent-blue)]">Subreel Studio</span>
             </div>
-            <p className="text-xs text-[var(--color-text-gray)] max-w-sm mt-2 font-medium">
+            <p className="text-xs text-[var(--color-text-gray)] max-w-sm font-medium">
               {t.footer_disclaimer}
             </p>
           </div>
@@ -625,25 +679,32 @@ function StatCard({
   value,
   label,
   color,
+  pulse,
 }: {
   icon: React.ReactNode;
   value: string;
   label: string;
   color: "blue" | "emerald" | "purple" | "orange";
+  pulse?: boolean;
 }) {
-  const colors = {
-    blue: "text-blue-500 bg-blue-500/10 border-blue-500/20",
-    emerald: "text-emerald-500 bg-emerald-500/10 border-emerald-500/20",
-    purple: "text-purple-500 bg-purple-500/10 border-purple-500/20",
-    orange: "text-orange-500 bg-orange-500/10 border-orange-500/20",
+  const palette = {
+    blue:    { card: "border-blue-500/20 hover:border-blue-500/40",    icon: "text-blue-500 bg-blue-500/10",    glow: "group-hover:shadow-[0_8px_32px_-8px_rgba(59,130,246,0.35)]" },
+    emerald: { card: "border-emerald-500/20 hover:border-emerald-500/40", icon: "text-emerald-500 bg-emerald-500/10", glow: "group-hover:shadow-[0_8px_32px_-8px_rgba(34,197,94,0.35)]" },
+    purple:  { card: "border-purple-500/20 hover:border-purple-500/40",  icon: "text-purple-500 bg-purple-500/10",  glow: "group-hover:shadow-[0_8px_32px_-8px_rgba(168,85,247,0.35)]" },
+    orange:  { card: "border-orange-500/20 hover:border-orange-500/40",  icon: "text-orange-500 bg-orange-500/10",  glow: "group-hover:shadow-[0_8px_32px_-8px_rgba(249,115,22,0.35)]" },
   };
+  const p = palette[color];
+
   return (
-    <div className={`bg-[var(--color-card-bg)] border ${colors[color]} p-5 md:p-8 rounded-[1.75rem] md:rounded-[2.5rem] transition-all hover:scale-[1.02] group`}>
-      <div className={`w-12 h-12 md:w-16 md:h-16 rounded-2xl flex items-center justify-center mb-4 md:mb-6 transition-transform group-hover:rotate-3 ${colors[color].split(" ")[0]} ${colors[color].split(" ")[1]}`}>
+    <div className={`bg-[var(--color-card-bg)] border ${p.card} ${p.glow} p-4 md:p-6 rounded-2xl md:rounded-[2rem] transition-all hover:scale-[1.02] group`}>
+      <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-5 transition-transform group-hover:rotate-3 ${p.icon}`}>
         {icon}
       </div>
-      <div className="text-xl md:text-3xl font-[1000] tracking-tighter mb-1 uppercase italic leading-none break-all">{value}</div>
-      <div className="text-[8px] md:text-[10px] uppercase font-bold text-[var(--color-text-gray)] tracking-[0.22em]">{label}</div>
+      <div className="text-lg md:text-2xl font-[900] tracking-tighter mb-1 uppercase italic leading-none break-all">{value}</div>
+      <div className="flex items-center gap-1.5">
+        {pulse && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(34,197,94,0.8)]" />}
+        <div className="text-[9px] md:text-[10px] uppercase font-bold text-[var(--color-text-gray)] tracking-[0.2em]">{label}</div>
+      </div>
     </div>
   );
 }
