@@ -130,6 +130,23 @@ export async function createLauncherAnnouncement(
   return mapAnnouncement(data as LauncherAnnouncementRow);
 }
 
+export async function deleteLauncherAnnouncement(viewer: AccountUser | null, announcementId: string) {
+  assertStaff(viewer);
+
+  if (!announcementId) {
+    throw new Error("announcement_id_required");
+  }
+
+  const admin = getSupabaseAdminClient() as any;
+  const { error } = await admin.from("launcher_announcements").delete().eq("id", announcementId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { id: announcementId };
+}
+
 export function toLauncherNewsPayload(items: LauncherAnnouncementRecord[]) {
   return {
     news: items.map((item, index) => ({
