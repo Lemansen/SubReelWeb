@@ -311,41 +311,6 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Mobile App — full width */}
-          <Link
-            href="/mobile"
-            className="sm:col-span-2 group relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[linear-gradient(135deg,var(--color-card-bg),var(--color-panel-bg))] p-6 sm:p-8 md:p-12 transition-all hover:border-[var(--color-accent-blue)] hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.15)] flex flex-col sm:flex-row gap-6 sm:gap-10 justify-between min-h-[240px] sm:min-h-[280px] md:min-h-[320px]"
-          >
-            <div className="absolute top-0 right-0 p-8 md:p-10 opacity-5 group-hover:opacity-10 group-hover:scale-110 group-hover:-rotate-6 transition-all pointer-events-none">
-              <MessageCircle size={180} strokeWidth={1} />
-            </div>
-
-            <div className="relative z-10 max-w-2xl">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-6 sm:mb-8 md:mb-10 rounded-2xl bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] flex items-center justify-center border border-[var(--color-accent-blue)]/20 group-hover:rotate-6 transition-transform">
-                <MessageCircle size={28} strokeWidth={2.5} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-5xl font-[1000] mb-3 sm:mb-4 md:mb-6 uppercase italic tracking-tighter leading-none">
-                {t.mobile_title}
-              </h2>
-              <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-lg">
-                {t.mobile_desc}
-              </p>
-              <div className="mt-5 sm:mt-6 md:mt-8 inline-flex">
-                <span className="rounded-full border border-[var(--color-accent-blue)]/20 bg-[var(--color-accent-blue)]/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-[var(--color-accent-blue)]">
-                  {t.mobile_badge}
-                </span>
-              </div>
-            </div>
-
-            <div className="relative z-10 flex items-end sm:items-end shrink-0">
-              <div className="flex items-center gap-3 text-xs sm:text-sm font-black uppercase italic tracking-wider text-[var(--color-accent-blue)] group-hover:translate-x-2 transition-transform">
-                {t.hint} <ArrowRight size={16} strokeWidth={3} />
-              </div>
-            </div>
-          </Link>
-
-
-
         </div>
       </main>
 

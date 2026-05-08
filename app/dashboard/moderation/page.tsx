@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCurrentAccountUser } from "@/lib/auth-session";
 import { getModerationDashboardData } from "@/lib/feedback";
+import { getModerationLauncherAnnouncements } from "@/lib/launcher-news";
 import { ModerationDashboardClient } from "./moderation-client";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,10 @@ export default async function ModerationDashboardPage() {
     redirect("/dashboard");
   }
 
-  const snapshot = await getModerationDashboardData(user);
+  const [snapshot, launcherNews] = await Promise.all([
+    getModerationDashboardData(user),
+    getModerationLauncherAnnouncements(user),
+  ]);
 
   return (
     <main className="min-h-screen bg-[var(--color-bg)] px-6 py-10 text-[var(--color-text)]">
@@ -46,7 +50,11 @@ export default async function ModerationDashboardPage() {
           </div>
         </div>
 
-        <ModerationDashboardClient initialIdeas={snapshot.ideasQueue} initialBugs={snapshot.bugsQueue} />
+        <ModerationDashboardClient
+          initialIdeas={snapshot.ideasQueue}
+          initialBugs={snapshot.bugsQueue}
+          initialNews={launcherNews}
+        />
       </div>
     </main>
   );

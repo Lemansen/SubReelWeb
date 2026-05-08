@@ -103,6 +103,57 @@ const content = {
 
     footer_disclaimer: "Не является официальным сервисом Minecraft. Не одобрено Mojang или Microsoft.",
     footer_since: "Существует с 2020 года",
+
+    survival_badge: "МАЛЫЙ ОНЛАЙН • ХАРДКОРНАЯ СУЕТА",
+
+survival_title: "Мы не про большой онлайн.",
+survival_desc:
+  "Если вы ищете сервер с тысячами игроков и вечным шумом — этот сервер не для вас. Здесь нас мало. Здесь мы выживаем, строим историю и создаём атмосферу, а не играем в постановочное РП.",
+
+survival_points: [
+  "Маленькое, живое комьюнити",
+  "Свобода действий без навязанных сценариев",
+  "Выживание важнее РП",
+  "Суета, хаос, альянсы и предательства",
+],
+
+join_steps_title: "Как зайти на сервер?",
+join_steps: [
+  "Иметь любой уровень платной подписки",
+  "Написать мне в личные сообщения BOOSTY ваш ник в Minecraft",
+  "Зайти на flectone.net",
+],
+
+version_title: "Какая версия Minecraft?",
+version_desc:
+  "Самая последняя — 1.26.1.2. В дальнейшем сервер будет обновляться выше.",
+
+pirate_title: "Можно ли без лицензии?",
+pirate_desc:
+  "Да. Но ваш никнейм должен быть уникальным и не существовать в свободной среде.",
+
+world_title: "Что будет на сервере?",
+world_points: [
+  "Полная свобода действий и живой геймплей",
+  "Нижний мир и Энд сначала будут закрыты",
+  "Игроки сами решают, когда открывать измерения",
+  "Торговля жителей изменена экспериментами Mojang",
+],
+
+forbidden_title: "Что запрещено?",
+forbidden_points: [
+  "Миникарты и точки смерти",
+  "Динамическое освещение и шейдеры",
+  "KillAura, X-Ray, Fly, AutoClicker и прочие читы",
+  "Вред игрокам и кража ресурсов без согласия",
+],
+
+allowed_title: "Что разрешено?",
+allowed_points: [
+  "Любой багоюз внутри ванильного Minecraft",
+  "Дюпы ковров, рельс, песка, TNT и прочего",
+  "Делай что угодно, пока не мешаешь другим игрокам",
+],
   },
   EN: {
     nav_home: "Home",
@@ -178,6 +229,17 @@ const content = {
 
     footer_disclaimer: "Not an official Minecraft service. Not approved by Mojang or Microsoft.",
     footer_since: "Since 2020",
+
+    survival_badge: "SMALL ONLINE • HARDCORE CHAOS",
+    survival_title: "We are not about massive online.",
+    survival_desc:
+      "If you are looking for a server with thousands of players and endless noise, this is probably not the place. Here we are few, we survive, build stories, and create atmosphere instead of staged roleplay.",
+    survival_points: [
+      "Small, living community",
+      "Freedom without forced scripts",
+      "Survival matters more than roleplay",
+      "Chaos, alliances, betrayal, and stories",
+    ],
   },
 } as const;
 
@@ -486,6 +548,152 @@ export default function ServerPage() {
         </div>
       </section>
 
+      <section className="px-4 md:px-6 pb-8 md:pb-14">
+  <div className="max-w-7xl mx-auto">
+    <div className="relative overflow-hidden rounded-[2rem] border border-[var(--color-border-sharp)] bg-[var(--color-panel-bg)] p-6 md:p-10 lg:p-14">
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.08),transparent_45%)]" />
+
+      <div className="relative grid lg:grid-cols-2 gap-10 items-center">
+
+        <div>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-blue-500/20 bg-blue-500/10 text-blue-400 text-[10px] md:text-xs font-black uppercase tracking-[0.25em] mb-6">
+            {t.survival_badge}
+          </div>
+
+          <h2 className="text-3xl md:text-5xl font-black uppercase italic tracking-[-0.04em] leading-[0.95] mb-6">
+            {t.survival_title}
+          </h2>
+
+          <p className="text-sm md:text-lg leading-relaxed text-[var(--color-text-gray)] max-w-2xl">
+            {t.survival_desc}
+          </p>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-3">
+          {t.survival_points.map((point, idx) => (
+            <div
+              key={idx}
+              className="rounded-2xl border border-[var(--color-border-sharp)] bg-[var(--color-bg)] p-5"
+            >
+              <div className="text-xs uppercase tracking-[0.25em] text-blue-400 font-black mb-3">
+                0{idx + 1}
+              </div>
+
+              <div className="font-bold text-sm md:text-base leading-relaxed">
+                {point}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section className="relative overflow-hidden py-24 bg-white dark:bg-[#0a0a0a] transition-colors duration-300">
+  {/* Декоративный фон */}
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-7xl opacity-10 pointer-events-none">
+    <div className="absolute top-[-10%] right-[-10%] w-[400px] h-[400px] bg-indigo-500 rounded-full blur-[120px]" />
+    <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-purple-500 rounded-full blur-[120px]" />
+  </div>
+
+  <div className="container relative mx-auto px-6">
+    <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+      <div className="max-w-2xl">
+        <h2 className="text-4xl font-black uppercase tracking-tighter text-neutral-900 dark:text-white sm:text-5xl">
+          Рекомендации <span className="text-indigo-500">сообщества</span>
+        </h2>
+        <p className="mt-4 text-lg leading-relaxed text-neutral-600 dark:text-neutral-400">
+          Мы ценим труд талантливых разработчиков и художников. Здесь собраны сторонние проекты, которые мы официально рекомендуем для лучшего игрового опыта на нашем сервере.
+        </p>
+      </div>
+    </div>
+
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      {/* Карточка 1: SP DuoPack */}
+      <a 
+        href="https://sp.duopack.ru/" 
+        target="_blank" 
+        className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-8 transition-all hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-500/10"
+      >
+        <div>
+          <div className="mb-4 inline-flex h-10 items-center rounded-full bg-orange-500/10 px-4 text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400">
+            Resource Pack
+          </div>
+          <h3 className="text-xl font-bold text-neutral-900 dark:text-white">SP DuoPack</h3>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            Эксклюзивные визуальные улучшения и проработанные модели для погружения в мир.
+          </p>
+        </div>
+        <div className="mt-8 flex items-center text-sm font-bold text-neutral-900 dark:text-white group-hover:text-indigo-500 transition-colors">
+          Подробнее <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        </div>
+      </a>
+
+      {/* Карточка 2: SPEmotes */}
+      <a 
+        href="https://spemotes.com/" 
+        target="_blank" 
+        className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-8 transition-all hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10"
+      >
+        <div>
+          <div className="mb-4 inline-flex h-10 items-center rounded-full bg-blue-500/10 px-4 text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+            Animations
+          </div>
+          <h3 className="text-xl font-bold text-neutral-900 dark:text-white">SPEmotes</h3>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            Мод на эмоции, делающий общение между игроками по-настоящему живым.
+          </p>
+        </div>
+        <div className="mt-8 flex items-center text-sm font-bold text-neutral-900 dark:text-white group-hover:text-blue-500 transition-colors">
+<svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        </div>
+      </a>
+
+      {/* Карточка 3: DuoPack */}
+      <a 
+        href="https://duopack.ru/" 
+        target="_blank" 
+        className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-8 transition-all hover:border-emerald-500/50 hover:shadow-2xl hover:shadow-emerald-500/10"
+      >
+        <div>
+          <div className="mb-4 inline-flex h-10 items-center rounded-full bg-emerald-500/10 px-4 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+            Vanilla Plus
+          </div>
+          <h3 className="text-xl font-bold text-neutral-900 dark:text-white">DuoPack Classic</h3>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            Оригинальный взгляд на стандартные текстуры в высоком качестве.
+          </p>
+        </div>
+        <div className="mt-8 flex items-center text-sm font-bold text-neutral-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+          Открыть <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        </div>
+      </a>
+
+      {/* Карточка 4: Flectone */}
+      <a 
+        href="https://flectone.net/ru" 
+        target="_blank" 
+        className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/50 dark:bg-neutral-900/50 p-8 transition-all hover:border-purple-500/50 hover:shadow-2xl hover:shadow-purple-500/10"
+      >
+        <div>
+          <div className="mb-4 inline-flex h-10 items-center rounded-full bg-purple-500/10 px-4 text-xs font-bold uppercase tracking-wider text-purple-600 dark:text-purple-400">
+            Community Hub
+          </div>
+          <h3 className="text-xl font-bold text-neutral-900 dark:text-white">Flectone</h3>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            Глобальный портал с модификациями и инструментами для игроков.
+          </p>
+        </div>
+        <div className="mt-8 flex items-center text-sm font-bold text-neutral-900 dark:text-white group-hover:text-purple-500 transition-colors">
+          Перейти <svg className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
       {/* ── WIKI ── */}
       <section className="px-4 md:px-6 py-14 md:py-20 relative">
         <div className="max-w-7xl mx-auto">
@@ -530,6 +738,8 @@ export default function ServerPage() {
           </div>
         </div>
       </section>
+
+
 
       {/* ── MAP ── */}
       <section className="px-4 md:px-6 py-6 md:py-8 relative">
@@ -623,6 +833,8 @@ export default function ServerPage() {
         </div>
       </section>
 
+
+
       {/* ── ACCESS ── */}
       <section className="px-4 md:px-6 py-16 md:py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:36px_36px] opacity-[0.03] [mask-image:radial-gradient(ellipse_50%_80%_at_50%_50%,#000_60%,transparent_100%)]" />
@@ -707,4 +919,5 @@ function StatCard({
       </div>
     </div>
   );
+  
 }
