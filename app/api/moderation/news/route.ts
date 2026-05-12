@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentAccountUser } from "@/lib/auth-session";
 import {
   createLauncherAnnouncement,
+  deleteLauncherAnnouncement,
   type LauncherAnnouncementKind,
   type LauncherAnnouncementScope,
 } from "@/lib/launcher-news";
@@ -44,6 +45,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, announcement });
   } catch (error) {
     const message = error instanceof Error ? error.message : "news_create_failed";
+    return NextResponse.json({ ok: false, error: message }, { status: message === "forbidden" ? 403 : 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const user = await getCurrentAccountUser();
+    const { searchParams } = new URL(request.url);
+    const announcementId = searchParams.get("id")?.trim() ?? "";
+
+    if (!announcementId) {
+      return NextResponse.json({ ok: false, error: "announcement_id_required" }, { status: 400 });
+    }
+
+    const deleted = await deleteLauncherAnnouncement(user, announcementId);
+    return NextResponse.json({ ok: true, deleted });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "news_delete_failed";
     return NextResponse.json({ ok: false, error: message }, { status: message === "forbidden" ? 403 : 500 });
   }
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentAccountUser } from "@/lib/auth-session";
-import { type BugStatus, updateBugModeration } from "@/lib/feedback";
+import { deleteBugModeration, type BugStatus, updateBugModeration } from "@/lib/feedback";
 
 const allowedStatuses = new Set<BugStatus>(["pending", "accepted", "in_progress", "fixed", "rejected"]);
 
@@ -28,6 +28,29 @@ export async function POST(
     return NextResponse.json({ ok: true, bug });
   } catch (error) {
     const message = error instanceof Error ? error.message : "bug_update_failed";
+    return NextResponse.json(
+      { ok: false, error: message },
+      { status: message === "forbidden" ? 403 : 500 },
+    );
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ bugId: string }> },
+) {
+  const user = await getCurrentAccountUser();
+  const { bugId } = await params;
+
+  if (!bugId) {
+    return NextResponse.json({ ok: false, error: "fill" }, { status: 400 });
+  }
+
+  try {
+    const deleted = await deleteBugModeration(user, bugId);
+    return NextResponse.json({ ok: true, deleted });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "bug_delete_failed";
     return NextResponse.json(
       { ok: false, error: message },
       { status: message === "forbidden" ? 403 : 500 },

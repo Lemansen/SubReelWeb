@@ -484,3 +484,39 @@ export async function updateBugModeration(
   const authors = await loadAuthorProfiles([(data as BugRow).author_id]);
   return mapModerationBug(data as BugRow, authors);
 }
+
+export async function deleteIdeaModeration(viewer: AccountUser | null, ideaId: string) {
+  assertStaff(viewer);
+
+  if (!ideaId) {
+    throw new Error("idea_id_required");
+  }
+
+  const admin = getSupabaseAdminClient() as any;
+  await admin.from("idea_votes").delete().eq("idea_id", ideaId);
+
+  const { error } = await admin.from("feature_ideas").delete().eq("id", ideaId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { id: ideaId };
+}
+
+export async function deleteBugModeration(viewer: AccountUser | null, bugId: string) {
+  assertStaff(viewer);
+
+  if (!bugId) {
+    throw new Error("bug_id_required");
+  }
+
+  const admin = getSupabaseAdminClient() as any;
+  const { error } = await admin.from("bug_reports").delete().eq("id", bugId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { id: bugId };
+}
