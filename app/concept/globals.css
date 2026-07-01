@@ -2,7 +2,7 @@
 
 /* Базовые лаунчерные настройки */
 .launcher-container {
-  --bg-dark: #08080a;
+  --bg-dark: #15ff00;
   --panel-bg: rgba(18, 18, 22, 0.85);
   --panel-solid: #111114;
   --accent-blue: #4C85FF;
@@ -1079,4 +1079,904 @@ opacity:1;
 
 }
 
+}
+
+/* ======================================================= */
+/* === БАЗОВЫЙ КОНТЕЙНЕР ДЛЯ МОДАЛКИ (OVERLAY)          === */
+/* ======================================================= */
+
+.news-panel {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 9, 11, 0.92);
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+  padding: 40px 60px;
+  border-radius: 32px;
+  opacity: 0;
+  transform: scale(1.02);
+  pointer-events: none;
+  transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+}
+
+.news-panel.open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.close-btn {
+  position: absolute;
+  top: 30px;
+  right: 30px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.modpack-flow-container {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
+/* ======================================================= */
+/* === ОБЩИЙ ШАПКА ФОРМЫ (ДЛЯ ШАГА 1 И ШАГА 2)            === */
+/* ======================================================= */
+
+.modpack-flow-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.modpack-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modpack-back-arrow-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.modpack-back-arrow-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.modpack-tag {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.modpack-tag.studio {
+  background: rgba(76, 133, 255, 0.1);
+  border: 1px solid rgba(76, 133, 255, 0.25);
+  color: #78C8FF;
+}
+
+.modpack-tag.flow {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+}
+
+.modpack-flow-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(180deg, #fff 40%, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 4px;
+}
+
+.modpack-flow-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.modpack-header-line {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1), transparent 80%);
+  margin-top: 6px;
+}
+
+
+/* ======================================================= */
+/* === СТИЛИ ШАГА 1: ВЫБОР СПОСОБА СОЗДАНИЯ               === */
+/* ======================================================= */
+
+.modpack-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 20px;
+  flex: 1;
+}
+
+.modpack-main-column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.modpack-sub-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.modpack-option-card {
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid var(--border-light);
+  border-radius: 20px;
+  padding: 24px;
+  display: flex;
+  gap: 20px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.modpack-option-card:hover:not(.disabled-card) {
+  background: rgba(255, 255, 255, 0.02);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.modpack-option-card.recommended {
+  border-color: rgba(76, 133, 255, 0.3);
+  background: linear-gradient(135deg, rgba(76, 133, 255, 0.03) 0%, transparent 100%);
+}
+
+.modpack-option-card.recommended:hover {
+  border-color: var(--accent-blue);
+  box-shadow: 0 12px 30px rgba(76, 133, 255, 0.1);
+}
+
+/* Иконки карточек создания */
+.modpack-card-icon-box {
+  width: 54px;
+  height: 54px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.modpack-icon-text {
+  font-size: 16px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.modpack-icon-text.text-green { color: #2ed573; }
+.modpack-icon-text.text-orange { color: #ff7f50; }
+
+/* Тексты карточек */
+.modpack-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modpack-card-info h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.modpack-card-info p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Бейджи состояния */
+.modpack-card-badge {
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 5px;
+  letter-spacing: 0.5px;
+}
+
+.recommended-badge {
+  background: rgba(76, 133, 255, 0.15);
+  color: #78C8FF;
+  border: 1px solid rgba(76, 133, 255, 0.3);
+}
+
+.progress-badge {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-muted);
+  border: 1px solid var(--border-light);
+}
+
+/* Заблокированные карточки */
+.disabled-card {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Правая колонка "В планах" */
+.modpack-side-column .future-card {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-style: dashed;
+}
+
+.center-content {
+  align-items: center;
+}
+
+.future-badge {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.modpack-future-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px dashed var(--border-light);
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+
+/* ======================================================= */
+/* === СТИЛИ ШАГА 2: НАСТРОЙКА НОВОЙ СБОРКИ               === */
+/* ======================================================= */
+
+.config-flow-layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 32px;
+  flex: 1;
+  overflow: hidden;
+}
+
+.config-form-side {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.config-input-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.config-input-block label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.config-input-wrapper {
+  display: flex;
+  height: 52px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s ease;
+}
+
+.config-input-wrapper:focus-within {
+  border-color: var(--accent-blue);
+}
+
+.config-input-icon {
+  width: 52px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  border-right: 1px solid var(--border-light);
+}
+
+.config-input-wrapper input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0 16px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+/* Сетка выбора мод-лоадеров */
+.loader-selector-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.loader-select-card {
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.loader-select-card:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.loader-select-card.active {
+  background: rgba(76, 133, 255, 0.06);
+  border-color: rgba(76, 133, 255, 0.35);
+}
+
+.loader-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.loader-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.loader-card-header h4 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+  flex: 1;
+}
+
+.check-active {
+  color: #78C8FF;
+}
+
+.loader-select-card p {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding-left: 20px;
+}
+
+/* Колонка выбора версий Майнкрафт */
+.config-version-side {
+  background: rgba(18, 18, 24, 0.4);
+  border: 1px solid var(--border-light);
+  border-radius: 24px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 480px; /* Слегка увеличили под табы */
+}
+
+.version-side-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+
+/* ======================================================= */
+/* === КОМПОНЕНТ ВКЛАДОК (ТАБЫ)                          === */
+/* ======================================================= */
+
+.config-tabs-nav {
+  display: flex;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.config-tab-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  background: transparent;
+  border: none;
+  border-radius: 9px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.config-tab-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.config-tab-btn.active {
+  color: #fff;
+  background: rgba(76, 133, 255, 0.1);
+  border: 1px solid rgba(76, 133, 255, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.tab-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  color: var(--text-muted);
+}
+
+.config-tab-btn.active .tab-badge {
+  background: rgba(76, 133, 255, 0.2);
+  color: #78C8FF;
+}
+
+/* Контейнеры контента вкладок */
+.tab-content {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tab-content.active {
+  display: flex;
+  animation: tabFadeIn 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes tabFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+/* ======================================================= */
+/* === СКРОЛЛ-СПИСОК И ЯЧЕЙКИ ВЕРСИЙ                    === */
+/* ======================================================= */
+
+.version-scroll-grid {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-right: 6px;
+  margin-bottom: 20px;
+}
+
+.version-scroll-grid::-webkit-scrollbar { 
+  width: 4px; 
+}
+
+.version-scroll-grid::-webkit-scrollbar-thumb { 
+  background: rgba(255, 255, 255, 0.08); 
+  border-radius: 99px; 
+}
+
+.version-cell-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.version-cell-item:hover {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.version-cell-item.selected {
+  background: rgba(120, 200, 255, 0.08);
+  border-color: rgba(76, 133, 255, 0.4);
+}
+
+.version-cell-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.v-cube {
+  width: 8px;
+  height: 8px;
+  background: #3a3a44;
+  border-radius: 2px;
+  transition: all 0.15s ease;
+}
+
+.version-cell-item.selected .v-cube {
+  background: #78C8FF;
+  box-shadow: 0 0 8px #4C85FF;
+}
+
+.v-num {
+  font-size: 14px;
+  font-weight: 700;
+  font-family: monospace;
+  color: var(--text-muted);
+}
+
+.version-cell-item.selected .v-num {
+  color: #fff;
+}
+
+.v-selected-badge {
+  font-size: 9px;
+  font-weight: 900;
+  background: rgba(76, 133, 255, 0.2);
+  color: #78C8FF;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+
+/* ======================================================= */
+/* === НИЖНЯЯ ПАНЕЛЬ ДЕЙСТВИЙ (ФИКСИРОВАННАЯ)            === */
+/* ======================================================= */
+
+.config-actions-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: auto; /* Железно прижимает к низу контейнера */
+}
+
+.config-cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  height: 46px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.config-cancel-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.config-submit-btn {
+  flex: 1;
+  background: var(--accent-gradient);
+  color: #000;
+  border: none;
+  height: 46px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.config-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(76, 133, 255, 0.3);
+}
+
+
+/* ======================================================= */
+/* === ОВЕРЛЕЙ БЫСТРОГО ВЫБОРА ВЕРСИИ                    === */
+/* ======================================================= */
+
+.version-picker-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 9, 11, 0.88);
+  backdrop-filter: blur(35px);
+  -webkit-backdrop-filter: blur(35px);
+  padding: 40px 60px;
+  border-radius: 32px;
+  opacity: 0;
+  transform: scale(1.03);
+  pointer-events: none;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.4s ease;
+  z-index: 55;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.version-picker-overlay.open {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: all;
+}
+
+.version-picker-shell {
+  width: 100%;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.version-picker-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.version-picker-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vp-tag {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.vp-tag.studio {
+  background: rgba(76, 133, 255, 0.1);
+  border: 1px solid rgba(76, 133, 255, 0.25);
+  color: #78C8FF;
+}
+
+.vp-tag.flow {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+}
+
+.version-picker-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.vp-title-icon { 
+  color: #78C8FF; 
+}
+
+.version-picker-title-row h1 {
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  background: linear-gradient(180deg, #fff 40%, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.version-picker-subtitle {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  max-width: 600px;
+}
+
+.vp-header-line {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(76, 133, 255, 0.5), transparent 80%);
+  margin-top: 4px;
+}
+
+/* Сетка быстрого выбора версий */
+.version-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.vp-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.015);
+  border: 1px solid var(--border-light);
+  border-radius: 14px;
+  padding: 14px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  color: var(--text-main);
+}
+
+.vp-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-2px);
+}
+
+.vp-card.active {
+  background: rgba(76, 133, 255, 0.08);
+  border-color: rgba(76, 133, 255, 0.4);
+  box-shadow: 0 0 20px rgba(76, 133, 255, 0.15);
+}
+
+.vp-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vp-cube {
+  width: 10px;
+  height: 10px;
+  background: #3a3a44;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.vp-version-num {
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.3px;
+}
+
+.vp-card.active .vp-version-num { 
+  color: #fff; 
+}
+
+.vp-check {
+  margin-left: auto;
+  color: #78C8FF;
+}
+
+.vp-badge {
+  align-self: flex-start;
+  padding: 2px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  border: 1px solid;
+  border-radius: 5px;
+  text-transform: uppercase;
+}
+
+/* Футер оверлея */
+.version-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  margin-top: 6px;
+}
+
+.vp-current-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.vp-current-info svg { 
+  color: #78C8FF; 
+}
+
+.vp-current-info strong { 
+  color: var(--text-main); 
+  font-weight: 700; 
+}
+
+.vp-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.vp-cancel-btn {
+  background: transparent;
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  height: 42px;
+  padding: 0 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vp-cancel-btn:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.vp-apply-btn {
+  background: var(--accent-gradient);
+  color: #000;
+  border: none;
+  height: 42px;
+  padding: 0 24px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vp-apply-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px rgba(76, 133, 255, 0.35);
+}
+
+.vp-apply-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }

@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect, useRef } from "react";
 import {
   Flame,
@@ -15,31 +14,58 @@ import {
 import NewsPanel from "./components/NewsPanel";
 import SettingsOverlay from "./components/SettingsOverlay";
 import AccountOverlay from "./components/AccountOverlay";
-
-// Если эти компоненты созданы без TypeScript типов (.js/.jsx) или пути не подхватываются,
-// мы можем временно использовать заглушки или проверить наличие файлов в папке ./components/
 import BootOverlay from "./components/BootOverlay";
 import WelcomeOverlay from "./components/WelcomeOverlay";
 import LaunchAnimation from "./components/LaunchAnimation";
 import VideoOverlay from "./components/VideoOverlay";
+import ModpackOverlay from "./components/ModpackOverlay";
+import VersionPickerOverlay from "./components/VersionPickerOverlay";
+
+interface WindowControlsProps {
+  toggleFullscreen: () => void;
+  closeLauncher: () => void;
+}
+
+const WindowControls = ({ toggleFullscreen, closeLauncher }: WindowControlsProps) => (
+  <div className="window-controls">
+    <button className="window-btn" title="Свернуть (Компактный режим)">
+      <Minus size={14} />
+    </button>
+    <button className="window-btn" onClick={toggleFullscreen} title="Развернуть на весь экран">
+      <Square size={11} />
+    </button>
+    <button className="window-btn close" onClick={closeLauncher} title="Закрыть">
+      <X size={14} />
+    </button>
+  </div>
+);
 
 export default function Launcher() {
-  // === Состояния авторизации и профиля ===
   const [username, setUsername] = useState<string>("Gamer");
   const [inputName, setInputName] = useState<string>("");
 
-  // === Фазы приложения при старте ===
   const [appPhase, setAppPhase] = useState<"boot" | "welcome" | "launcher">("boot");
   const [bootFading, setBootFading] = useState(false);
   const [bootProgress, setBootProgress] = useState(0);
   const [bootStatus, setBootStatus] = useState("Инициализация лаунчера...");
   const bootFinishedRef = useRef(false);
 
-  // === СТЕЙТЫ ЭФФЕКТНОГО ЗАПУСКА И ВИДЕО ===
   const [launchStage, setLaunchStage] = useState<"idle" | "flying" | "video">("idle");
   const playBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Симуляция загрузки/проверки при первом заходе
+  const [selectedVersion, setSelectedVersion] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("subreel_version") || "1.21.1";
+    }
+    return "1.21.1";
+  });
+
+  const handleVersionSelect = (version: string) => {
+    setSelectedVersion(version);
+    localStorage.setItem("subreel_version", version);
+    console.log("✅ Выбрана версия:", version);
+  };
+
   useEffect(() => {
     const savedName = typeof window !== "undefined" ? localStorage.getItem("subreel_username") : null;
     if (savedName) setUsername(savedName);
@@ -90,26 +116,20 @@ export default function Launcher() {
     }
   };
 
-  // === ДОБАВЛЕННЫЕ ХЕНДЛЕРЫ АВТОРИЗАЦИИ (Fix Error 2304) ===
-  const handleAccountLogin = () => {
-    console.log("Авторизация аккаунта вызвана");
-  };
+  const handleAccountLogin = () => console.log("Авторизация аккаунта вызвана");
+  const handleAccountRegister = () => console.log("Регистрация аккаунта вызвана");
 
-  const handleAccountRegister = () => {
-    console.log("Регистрация аккаунта вызвана");
-  };
+  const [activeOverlay, setActiveOverlay] = useState<
+    "none" | "news" | "settings" | "account" | "modpack" | "version"
+  >("none");
 
-  // === Состояния экранов и вкладок ===
-  const [activeOverlay, setActiveOverlay] = useState<"none" | "news" | "settings" | "account">("none");
   const [activeTab, setActiveTab] = useState<"main" | "community">("main");
 
-  // Состояния игрового процесса
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [loadingText, setLoadingText] = useState("Проверка файлов...");
   const [isReady, setIsReady] = useState(false);
 
-  // Состояния конфигурации
   const [allocatedRam, setAllocatedRam] = useState(4);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [isAutoUpdate, setIsAutoUpdate] = useState(true);
@@ -120,8 +140,10 @@ export default function Launcher() {
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
       await document.documentElement.requestFullscreen();
+      setIsFullScreen(true);
     } else {
       await document.exitFullscreen();
+      setIsFullScreen(false);
     }
   };
 
@@ -129,23 +151,9 @@ export default function Launcher() {
     window.location.href = "/";
   };
 
-  const WindowControls = () => (
-    <div className="window-controls">
-      <button className="window-btn" title="Свернуть (Компактный режим)">
-        <Minus size={14} />
-      </button>
-      <button className="window-btn" onClick={toggleFullscreen} title="Развернуть на весь экран">
-        <Square size={11} />
-      </button>
-      <button className="window-btn close" onClick={closeLauncher} title="Закрыть">
-        <X size={14} />
-      </button>
-    </div>
-  );
-
   const handlePlayClick = () => {
     if (isReady) {
-      alert("Запуск Minecraft... Удачной игры на SubReel!");
+      alert(`Запуск Minecraft ${selectedVersion}... Удачной игры на SubReel!`);
       return;
     }
     if (isPlaying) return;
@@ -157,19 +165,14 @@ export default function Launcher() {
     const interval = setInterval(() => {
       setProgress((prev) => {
         const next = Math.min(prev + Math.floor(Math.random() * 12) + 3, 100);
-
-        if (next >= 50 && prev < 50) {
-          setLoadingText("Загрузка...");
-        }
+        if (next >= 50 && prev < 50) setLoadingText("Загрузка...");
 
         if (next >= 100) {
           clearInterval(interval);
           setLoadingText("Готово!");
-          
           setTimeout(() => {
             setLaunchStage("flying");
           }, 400);
-          
           return 100;
         }
         return next;
@@ -177,28 +180,9 @@ export default function Launcher() {
     }, 150);
   };
 
-  const handleFlyAnimationComplete = () => {
-    setLaunchStage("video");
-  };
-
-  const handleVideoClose = (isFinished: boolean) => {
-    setLaunchStage("idle");
-    
-    if (isFinished) {
-      setIsReady(true); 
-    } else {
-      setIsPlaying(false);
-      setProgress(0);
-      setLoadingText("Проверка файлов...");
-      setIsReady(false);
-    }
-  };
-
   return (
     <main className="launcher-container">
       <div className="app-shell">
-
-        {/* === ОСНОВНОЙ ВЕРХНИЙ НАВБАР === */}
         <header className={`navbar ${activeOverlay !== "none" ? "displaced-top" : ""}`}>
           <div className="logo-zone">
             <span className="logo-icon">S</span>
@@ -207,7 +191,6 @@ export default function Launcher() {
               <p>v0.1.0</p>
             </div>
           </div>
-
           <nav className="nav-links">
             <button
               className={activeTab === "main" && activeOverlay === "none" ? "active" : ""}
@@ -228,7 +211,6 @@ export default function Launcher() {
               <Settings size={16} /> Настройки
             </button>
           </nav>
-
           <div className="header-right-zone">
             <button
               type="button"
@@ -239,11 +221,10 @@ export default function Launcher() {
               <div className="avatar-box">{avatarInitials}</div>
               <span className="username-text">{username}</span>
             </button>
-            <WindowControls />
+            <WindowControls toggleFullscreen={toggleFullscreen} closeLauncher={closeLauncher} />
           </div>
         </header>
 
-        {/* === ЦЕНТРАЛЬНЫЙ ОСНОВНОЙ КОНТЕНТ === */}
         <main className={`content ${activeOverlay !== "none" ? "fade-out-content" : ""}`}>
           {activeTab === "main" ? (
             <div className="tab-wrapper">
@@ -251,7 +232,6 @@ export default function Launcher() {
                 <Flame size={16} className="fire-icon" />
                 <span>Свежие новости проекта</span>
               </button>
-
               <div className="center-hero">
                 <h1>Survival Reborn</h1>
                 <p>Добро пожаловать, <span style={{ color: "#78C8FF" }}>{username}</span>! Рады видеть тебя на технологичном клиенте SubReel.</p>
@@ -265,19 +245,17 @@ export default function Launcher() {
           )}
         </main>
 
-        {/* === ОСНОВНОЙ НИЖНИЙ ПОДВАЛ === */}
         <footer className={`bottom-bar ${activeOverlay !== "none" ? "displaced-bottom" : ""}`}>
           <div className="bottom-left">
-            <button className="secondary-btn custom-btn-1">
+            <button className="secondary-btn custom-btn-1" onClick={() => setActiveOverlay("modpack")}>
               <Layers size={16} />
               <span>Создать сборку</span>
             </button>
-            <button className="secondary-btn custom-btn-2">
+            <button className="secondary-btn custom-btn-2" onClick={() => setActiveOverlay("version")}>
               <FolderOpen size={16} />
-              <span>Выбрать версию</span>
+              <span>Версия: {selectedVersion}</span>
             </button>
           </div>
-
           <div className={`bottom-right ${isPlaying ? "active" : ""}`}>
             <div className="progress-wrapper">
               <div className="progress-info">
@@ -288,7 +266,6 @@ export default function Launcher() {
                 <div className="fill" style={{ width: `${progress}%` }}></div>
               </div>
             </div>
-
             <button
               ref={playBtnRef}
               className={`play-btn ${isPlaying && !isReady ? "loading-state" : ""} ${isReady ? "ready-state" : ""}`}
@@ -299,7 +276,6 @@ export default function Launcher() {
           </div>
         </footer>
 
-        {/* === ОВЕРЛЕИ СИСТЕМЫ === */}
         <SettingsOverlay
           isOpen={activeOverlay === "settings"}
           onCloseSettings={() => setActiveOverlay("none")}
@@ -315,7 +291,7 @@ export default function Launcher() {
           setIsAutoUpdate={setIsAutoUpdate}
           closeOnLaunch={closeOnLaunch}
           setCloseOnLaunch={setCloseOnLaunch}
-          WindowControls={WindowControls}
+          WindowControls={() => <WindowControls toggleFullscreen={toggleFullscreen} closeLauncher={closeLauncher} />}
         />
 
         <NewsPanel isOpen={activeOverlay === "news"} onClose={() => setActiveOverlay("none")} />
@@ -328,7 +304,7 @@ export default function Launcher() {
           username={username}
           avatarInitials={avatarInitials}
           onChangeNickname={setUsername}
-          WindowControls={WindowControls}
+          WindowControls={() => <WindowControls toggleFullscreen={toggleFullscreen} closeLauncher={closeLauncher} />}
         />
 
         <BootOverlay isOpen={appPhase === "boot"} isFading={bootFading} progress={bootProgress} status={bootStatus} />
@@ -342,22 +318,36 @@ export default function Launcher() {
           onRegister={handleAccountRegister}
         />
 
-        {/* ========================================================== 
-              КОМПОНЕНТЫ AAA-АНИМАЦИИ И ЭКРАНА ВИДЕОПРЕВЬЮ           
-           ========================================================== */}
-        
-        <LaunchAnimation 
-          isActive={launchStage === "flying"} 
-          triggerRef={playBtnRef} 
-          onComplete={handleFlyAnimationComplete} 
+        <VersionPickerOverlay
+          isOpen={activeOverlay === "version"}
+          onClose={() => setActiveOverlay("none")}
+          currentVersion={selectedVersion}
+          onSelectVersion={handleVersionSelect}
         />
 
-<VideoOverlay 
-  isOpen={launchStage === "video"} 
-  onClose={handleVideoClose} 
-  videoSrc="/videos/promo.mp4" /* Путь теперь валиден для браузера */
-/>
+        <ModpackOverlay isOpen={activeOverlay === "modpack"} onClose={() => setActiveOverlay("none")} />
 
+        <LaunchAnimation
+          isActive={launchStage === "flying"}
+          triggerRef={playBtnRef}
+          onComplete={() => setLaunchStage("video")}
+        />
+
+        <VideoOverlay
+          isOpen={launchStage === "video"}
+          onClose={(isFinished) => {
+            setLaunchStage("idle");
+            if (isFinished) {
+              setIsReady(true);
+            } else {
+              setIsPlaying(false);
+              setProgress(0);
+              setLoadingText("Проверка файлов...");
+              setIsReady(false);
+            }
+          }}
+          videoSrc="/videos/promo.mp4"
+        />
       </div>
     </main>
   );
