@@ -24,10 +24,13 @@ const content = {
     hero_title_main: "Subreel",
     hero_title_sub: "Studio",
     hero_desc:
-      "Разрабатываем инструменты и инфраструктуру для комфортной игры. Мы создаем среду, где технологии расширяют возможности Minecraft.",
+      "Разрабатываем инструменты и infrastructure для комфортной игры. Мы создаем среду, где технологии расширяют возможности Minecraft.",
     launcher_title: "Subreel Launcher",
     launcher_desc:
       "Собственный софт для управления сборками. Автоматическая установка модов, проверка файлов и высокая скорость загрузки.",
+    concept_launcher_title: "Концепт лаунчер",
+    concept_launcher_desc:
+      "Пример того, как будет выглядеть лаунчер. Взгляни на будущий интерфейс, дизайн и новые интерактивные элементы.",
     server_title: "Сервер",
     server_desc:
       "Приватный сервер с уникальными механиками, стабильным TPS и активным комьюнити. Место, где начинается твоя история.",
@@ -60,6 +63,9 @@ const content = {
     launcher_title: "Launcher",
     launcher_desc:
       "Custom software for build management. Automatic mod installation, file verification, and high download speeds.",
+    concept_launcher_title: "Concept Launcher",
+    concept_launcher_desc:
+      "An exclusive preview of the upcoming launcher layout. Take a look at the future UI, design, and interactive components.",
     server_title: "Server",
     server_desc:
       "A private server with unique mechanics, stable TPS, and an active community. The place where your story begins.",
@@ -277,6 +283,32 @@ export default function Home() {
               </h2>
               <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-[300px]">
                 {t.launcher_desc}
+              </p>
+            </div>
+
+            <div className="relative z-10 mt-6 sm:mt-8 flex items-center gap-3 text-xs sm:text-sm font-black uppercase italic tracking-wider text-[var(--color-accent-blue)] group-hover:translate-x-2 transition-transform">
+              {t.hint} <ArrowRight size={16} strokeWidth={3} />
+            </div>
+          </Link>
+
+          {/* Concept Launcher */}
+          <Link
+            href="/concept"
+            className="group relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[var(--color-card-bg)] p-6 sm:p-8 md:p-12 transition-all hover:border-[var(--color-accent-blue)] hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.2)] flex flex-col justify-between min-h-[280px] sm:min-h-[360px] md:min-h-[420px]"
+          >
+            <div className="absolute top-0 right-0 p-8 md:p-12 opacity-5 group-hover:opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all pointer-events-none">
+              <Tv2 size={140} strokeWidth={1} />
+            </div>
+
+            <div className="relative z-10">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-6 sm:mb-8 md:mb-10 rounded-2xl bg-[var(--color-accent-blue)] text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-transform">
+                <Tv2 size={28} strokeWidth={2.5} />
+              </div>
+              <h2 className="text-2xl sm:text-3xl md:text-5xl font-[1000] mb-3 sm:mb-4 md:mb-6 uppercase italic tracking-tighter leading-none">
+                {t.concept_launcher_title}
+              </h2>
+              <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-[300px]">
+                {t.concept_launcher_desc}
               </p>
             </div>
 

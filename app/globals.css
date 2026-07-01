@@ -111,8 +111,18 @@ body {
 
 .wiki-shell [data-sidebar],
 .wiki-shell aside {
-  background: color-mix(in srgb, var(--color-panel-bg) 92%, transparent);
-  backdrop-filter: blur(12px);
+  /* Подняли плотность цвета до 98% и увеличили размытие до 40px */
+  background: color-mix(in srgb, var(--color-panel-bg) 98%, transparent);
+  backdrop-filter: blur(40px);
+}
+
+.wiki-prose {
+  border: 1px solid color-mix(in srgb, var(--color-border-sharp) 82%, transparent);
+  border-radius: 2rem;
+  padding: 1.25rem;
+  /* Подняли плотность контентной части до 98% и добавили жесткий blur */
+  background: color-mix(in srgb, var(--color-card-bg) 98%, transparent);
+  backdrop-filter: blur(40px);
 }
 
 .wiki-sidebar-banner {
@@ -198,3 +208,4 @@ body {
     border-radius: 2.5rem;
   }
 }
+
