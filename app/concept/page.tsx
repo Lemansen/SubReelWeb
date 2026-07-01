@@ -15,23 +15,35 @@ import {
 import NewsPanel from "./components/NewsPanel";
 import SettingsOverlay from "./components/SettingsOverlay";
 import AccountOverlay from "./components/AccountOverlay";
+
+// Если эти компоненты созданы без TypeScript типов (.js/.jsx) или пути не подхватываются,
+// мы можем временно использовать заглушки или проверить наличие файлов в папке ./components/
 import BootOverlay from "./components/BootOverlay";
 import WelcomeOverlay from "./components/WelcomeOverlay";
+import LaunchAnimation from "./components/LaunchAnimation";
+import VideoOverlay from "./components/VideoOverlay";
 
 export default function Launcher() {
   // === Состояния авторизации и профиля ===
   const [username, setUsername] = useState<string>("Gamer");
   const [inputName, setInputName] = useState<string>("");
 
-  // === Фазы приложения: загрузка (boot) -> приветствие (welcome) -> лаунчер (launcher) ===
+  // === Фазы приложения при старте ===
   const [appPhase, setAppPhase] = useState<"boot" | "welcome" | "launcher">("boot");
   const [bootFading, setBootFading] = useState(false);
   const [bootProgress, setBootProgress] = useState(0);
   const [bootStatus, setBootStatus] = useState("Инициализация лаунчера...");
   const bootFinishedRef = useRef(false);
 
-  // Симуляция загрузки/проверки при первом заходе на страницу
+  // === СТЕЙТЫ ЭФФЕКТНОГО ЗАПУСКА И ВИДЕО ===
+  const [launchStage, setLaunchStage] = useState<"idle" | "flying" | "video">("idle");
+  const playBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Симуляция загрузки/проверки при первом заходе
   useEffect(() => {
+    const savedName = typeof window !== "undefined" ? localStorage.getItem("subreel_username") : null;
+    if (savedName) setUsername(savedName);
+
     const stages = [
       { at: 0, text: "Инициализация лаунчера..." },
       { at: 18, text: "Проверка файлов конфигурации..." },
@@ -44,30 +56,17 @@ export default function Launcher() {
     const interval = setInterval(() => {
       setBootProgress((prev) => {
         if (bootFinishedRef.current) return prev;
-
         const next = Math.min(prev + Math.floor(Math.random() * 9) + 4, 100);
-
-        // Обновляем текст статуса по достигнутому порогу
         const stage = [...stages].reverse().find((s) => next >= s.at);
         if (stage) setBootStatus(stage.text);
 
         if (next >= 100) {
           bootFinishedRef.current = true;
           clearInterval(interval);
-
-          // Небольшая пауза, чтобы пользователь увидел "Готово!"
           setTimeout(() => {
             setBootFading(true);
-
-            // Ждём завершения css-перехода (fade-out), затем решаем куда идти
             setTimeout(() => {
-              const savedName =
-                typeof window !== "undefined"
-                  ? localStorage.getItem("subreel_username")
-                  : null;
-
               if (savedName) {
-                setUsername(savedName);
                 setAppPhase("launcher");
               } else {
                 setAppPhase("welcome");
@@ -75,15 +74,13 @@ export default function Launcher() {
             }, 450);
           }, 500);
         }
-
         return next;
       });
-    }, 180);
+    }, 120);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Хендлер сохранения никнейма вручную
   const handleSaveNickname = (name: string) => {
     const trimmed = name.trim();
     if (trimmed) {
@@ -93,16 +90,13 @@ export default function Launcher() {
     }
   };
 
-  // Имитация авторизации через существующий аккаунт
+  // === ДОБАВЛЕННЫЕ ХЕНДЛЕРЫ АВТОРИЗАЦИИ (Fix Error 2304) ===
   const handleAccountLogin = () => {
-    // В будущем тут будет полноценный запрос к серверу авторизации
-    handleSaveNickname("Lemansen");
+    console.log("Авторизация аккаунта вызвана");
   };
 
-  // Имитация регистрации нового аккаунта
   const handleAccountRegister = () => {
-    // В будущем тут будет полноценный запрос на создание аккаунта
-    handleSaveNickname("NewPlayer");
+    console.log("Регистрация аккаунта вызвана");
   };
 
   // === Состояния экранов и вкладок ===
@@ -121,10 +115,8 @@ export default function Launcher() {
   const [isAutoUpdate, setIsAutoUpdate] = useState(true);
   const [closeOnLaunch, setCloseOnLaunch] = useState(true);
 
-  // Инициалы для аватарки (первые 2 буквы)
   const avatarInitials = username.slice(0, 2).toUpperCase();
 
-  // === Логика управления оконным режимом ===
   const toggleFullscreen = async () => {
     if (!document.fullscreenElement) {
       await document.documentElement.requestFullscreen();
@@ -152,23 +144,54 @@ export default function Launcher() {
   );
 
   const handlePlayClick = () => {
-    if (isPlaying || isReady) return;
+    if (isReady) {
+      alert("Запуск Minecraft... Удачной игры на SubReel!");
+      return;
+    }
+    if (isPlaying) return;
+
     setIsPlaying(true);
     setProgress(0);
     setLoadingText("Проверка файлов...");
 
     const interval = setInterval(() => {
       setProgress((prev) => {
-        const next = prev + Math.floor(Math.random() * 8) + 2;
+        const next = Math.min(prev + Math.floor(Math.random() * 12) + 3, 100);
+
+        if (next >= 50 && prev < 50) {
+          setLoadingText("Загрузка...");
+        }
+
         if (next >= 100) {
           clearInterval(interval);
           setLoadingText("Готово!");
-          setIsReady(true);
+          
+          setTimeout(() => {
+            setLaunchStage("flying");
+          }, 400);
+          
           return 100;
         }
         return next;
       });
-    }, 200);
+    }, 150);
+  };
+
+  const handleFlyAnimationComplete = () => {
+    setLaunchStage("video");
+  };
+
+  const handleVideoClose = (isFinished: boolean) => {
+    setLaunchStage("idle");
+    
+    if (isFinished) {
+      setIsReady(true); 
+    } else {
+      setIsPlaying(false);
+      setProgress(0);
+      setLoadingText("Проверка файлов...");
+      setIsReady(false);
+    }
   };
 
   return (
@@ -267,6 +290,7 @@ export default function Launcher() {
             </div>
 
             <button
+              ref={playBtnRef}
               className={`play-btn ${isPlaying && !isReady ? "loading-state" : ""} ${isReady ? "ready-state" : ""}`}
               onClick={handlePlayClick}
             >
@@ -275,7 +299,7 @@ export default function Launcher() {
           </div>
         </footer>
 
-        {/* === ДОЧЕРНИЙ КОМПОНЕНТ НАСТРОЕК === */}
+        {/* === ОВЕРЛЕИ СИСТЕМЫ === */}
         <SettingsOverlay
           isOpen={activeOverlay === "settings"}
           onCloseSettings={() => setActiveOverlay("none")}
@@ -294,13 +318,8 @@ export default function Launcher() {
           WindowControls={WindowControls}
         />
 
-        {/* === ДОЧЕРНИЙ КОМПОНЕНТ НОВОСТЕЙ === */}
-        <NewsPanel
-          isOpen={activeOverlay === "news"}
-          onClose={() => setActiveOverlay("none")}
-        />
+        <NewsPanel isOpen={activeOverlay === "news"} onClose={() => setActiveOverlay("none")} />
 
-        {/* === ДОЧЕРНИЙ КОМПОНЕНТ АККАУНТА === */}
         <AccountOverlay
           isOpen={activeOverlay === "account"}
           onCloseAccount={() => setActiveOverlay("none")}
@@ -308,19 +327,12 @@ export default function Launcher() {
           onOpenSettings={() => setActiveOverlay("settings")}
           username={username}
           avatarInitials={avatarInitials}
-          onChangeNickname={handleSaveNickname}
+          onChangeNickname={setUsername}
           WindowControls={WindowControls}
         />
 
-        {/* === ЭКРАН ЗАГРУЗКИ / ПРОВЕРКИ (BOOT OVERLAY) === */}
-        <BootOverlay
-          isOpen={appPhase === "boot"}
-          isFading={bootFading}
-          progress={bootProgress}
-          status={bootStatus}
-        />
+        <BootOverlay isOpen={appPhase === "boot"} isFading={bootFading} progress={bootProgress} status={bootStatus} />
 
-        {/* === СТАРТОВОЕ ОКНО: ВЫБОР РЕЖИМА ВХОДА (WELCOME OVERLAY) === */}
         <WelcomeOverlay
           isOpen={appPhase === "welcome"}
           inputName={inputName}
@@ -329,6 +341,22 @@ export default function Launcher() {
           onLogin={handleAccountLogin}
           onRegister={handleAccountRegister}
         />
+
+        {/* ========================================================== 
+              КОМПОНЕНТЫ AAA-АНИМАЦИИ И ЭКРАНА ВИДЕОПРЕВЬЮ           
+           ========================================================== */}
+        
+        <LaunchAnimation 
+          isActive={launchStage === "flying"} 
+          triggerRef={playBtnRef} 
+          onComplete={handleFlyAnimationComplete} 
+        />
+
+<VideoOverlay 
+  isOpen={launchStage === "video"} 
+  onClose={handleVideoClose} 
+  videoSrc="/videos/promo.mp4" /* Путь теперь валиден для браузера */
+/>
 
       </div>
     </main>

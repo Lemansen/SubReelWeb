@@ -737,3 +737,346 @@
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(76, 133, 255, 0.35);
 }
+
+/* ======================================================= */
+/* АНИМАЦИЯ ПОЛЁТА ЛОГОТИПА (LAUNCH ANIMATION)             */
+/* ======================================================= */
+.launch-animation-track {
+  position: absolute;
+  inset: 0;
+  z-index: 110;
+  pointer-events: none;
+}
+
+.flying-logo {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: var(--accent-gradient);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 0 25px rgba(76, 133, 255, 0.6);
+  transition: all 700ms cubic-bezier(0.25, 1, 0.2, 1); /* Фирменный cubic-bezier полёта */
+}
+
+.flying-logo .logo-core-text {
+  font-weight: 900;
+  color: #000;
+  font-size: 1.2rem;
+}
+
+/* Финальная точка полёта — строго по центру лаунчера с увеличением масштаба */
+.flying-logo.in-center {
+  left: 50% !important;
+  top: 45% !important;
+  transform: translate(-50%, -50%) scale(2.5) rotate(360deg);
+  opacity: 0; /* Мягко растворяется в конце полёта, уступая место видео */
+}
+
+.video-player-shell{
+
+width:980px;
+
+border-radius:26px;
+
+overflow:hidden;
+
+background:#0b0b0d;
+
+border:1px solid rgba(255,255,255,.08);
+
+box-shadow:
+
+0 40px 120px rgba(0,0,0,.75),
+
+0 0 80px rgba(76,133,255,.08);
+
+animation:videoIn .5s cubic-bezier(.2,.8,.2,1);
+
+}
+
+.video-header{
+
+height:68px;
+
+display:flex;
+
+justify-content:space-between;
+
+align-items:center;
+
+padding:0 22px;
+
+background:#111114;
+
+border-bottom:1px solid rgba(255,255,255,.05);
+
+}
+
+.video-logo{
+
+width:38px;
+
+height:38px;
+
+border-radius:10px;
+
+background:linear-gradient(
+135deg,
+#4C85FF,
+#78C8FF
+);
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+font-weight:900;
+
+color:black;
+
+}
+
+.video-footer{
+
+display:flex;
+
+align-items:center;
+
+gap:20px;
+
+padding:18px 24px;
+
+background:#111114;
+
+}
+
+.video-progress-track{
+
+height:5px;
+
+border-radius:999px;
+
+background:#202025;
+
+overflow:hidden;
+
+}
+
+.video-progress-fill{
+
+height:100%;
+
+background:
+
+linear-gradient(
+90deg,
+#4C85FF,
+#78C8FF
+);
+
+transition:width .15s linear;
+
+}
+
+/* Дополнительная кнопка звука симметрично кнопке закрытия, но снизу */
+.video-mute-btn {
+  position: absolute;
+  right: 32px;
+  bottom: 32px;
+  width: 38px;
+  height: 38px;
+  background: rgba(15, 15, 15, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 130;
+}
+
+.video-mute-btn.fade-in {
+  opacity: 0.7;
+  transform: scale(1);
+}
+
+.video-mute-btn.fade-in:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(0, 149, 255, 0.4); /* Подсвечиваем синеватым при наведении */
+  box-shadow: 0 0 10px rgba(0, 149, 255, 0.2);
+}
+
+/* Контейнер полосы прогресса */
+.video-custom-progress-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  z-index: 10;
+}
+
+/* Линия заполнения прогресса в фирменном стиле SubReel */
+.video-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #007aff, #00d2ff);
+  box-shadow: 0 0 8px #007aff;
+  transition: width 0.1s linear;
+  width: 0%;
+}
+
+.video-cinema-overlay{
+
+position:absolute;
+
+inset:0;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+background:
+radial-gradient(
+circle at center,
+rgba(28,30,38,.35),
+rgba(0,0,0,.92)
+);
+
+backdrop-filter:blur(18px);
+
+animation:overlayFade .45s ease;
+
+z-index:500;
+
+}
+
+.video-wrapper-core {
+  width: 82%;
+  max-width: 960px;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.8), 0 0 1px rgba(255, 255, 255, 0.15);
+  background: #000;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.cinema-video-element{
+
+display:block;
+
+width:100%;
+
+aspect-ratio:16/9;
+
+object-fit:cover;
+
+background:black;
+
+}
+
+.video-close-btn{
+
+width:42px;
+
+height:42px;
+
+border-radius:12px;
+
+background:rgba(255,255,255,.03);
+
+border:1px solid rgba(255,255,255,.08);
+
+opacity:0;
+
+transform:translateY(-8px);
+
+transition:.25s;
+
+}
+
+.video-close-btn.visible{
+
+opacity:1;
+
+transform:none;
+
+}
+
+.video-close-btn:hover{
+
+background:#ef4444;
+
+color:white;
+
+}
+
+.video-close-btn.fade-in {
+  opacity: 0.7;
+  transform: scale(1);
+}
+
+.video-close-btn.fade-in:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+@keyframes cinemaFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes videoIn{
+
+from{
+
+opacity:0;
+
+transform:
+
+translateY(25px)
+
+scale(.94);
+
+}
+
+to{
+
+opacity:1;
+
+transform:
+
+translateY(0)
+
+scale(1);
+
+}
+
+}
+@keyframes overlayFade{
+
+from{
+
+opacity:0;
+
+}
+
+to{
+
+opacity:1;
+
+}
+
+}
