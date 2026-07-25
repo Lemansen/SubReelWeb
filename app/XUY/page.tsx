@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
-export default function LegacyXuyPage() {
-  redirect("/");
+export default function CommunityPage() {
+  // Перекидываем на общую страницу "В разработке"
+  redirect("/dev");
 }

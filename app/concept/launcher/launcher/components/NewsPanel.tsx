@@ -27,10 +27,10 @@ export default function NewsPanel({ isOpen, onClose }: NewsPanelProps) {
     {
       id: 2,
       category: "Сервер",
-      title: "Технические работы на TechnoMagic",
+      title: "Технические работы на SubReelServer",
       version: "v1.4.2-server",
       date: "Вчера в 04:00",
-      author: "TechTeam",
+      author: "TheTerrona",
       patchnotes: [
         { title: "Обновление серверного ядра", desc: "Исправлены утечки памяти при высокой нагрузке онлайн-игроков. Лимит чанков на команду увеличен." },
         { title: "Глобальный баланс мобов", desc: "Ночные монстры стали сильнее на 15%, но шанс выпадения редких эссенций увеличен вдвое. Добавлен новый мини-босс на спавне." },
@@ -42,7 +42,7 @@ export default function NewsPanel({ isOpen, onClose }: NewsPanelProps) {
       title: "Патч безопасности прокси",
       version: "v1.0.3-hotfix",
       date: "28.06.2026",
-      author: "Lemansen",
+      author: "TheTerrona",
       patchnotes: [
         { title: "Фикс DDoS-уязвимости", desc: "Заблокирован эксплойт с поддельной авторизацией пакетов сессии. Защита BungeeCord обновлена." },
       ],

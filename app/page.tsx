@@ -14,6 +14,8 @@ import {
   Menu,
   X,
   Tv2,
+  Youtube,
+  Radio,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -123,6 +125,46 @@ export default function Home() {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Карточки вынесены в конфиг — так проще добавлять/переставлять новые разделы
+  const cards = [
+    {
+      index: "01",
+      href: "/launcher",
+      icon: Download,
+      title: t.launcher_title,
+      desc: t.launcher_desc,
+      filled: true,
+    },
+    {
+      index: "02",
+      href: "/concept",
+      icon: Tv2,
+      title: t.concept_launcher_title,
+      desc: t.concept_launcher_desc,
+      filled: true,
+    },
+    {
+      index: "03",
+      href: "/server",
+      icon: LayoutGrid,
+      title: t.server_title,
+      desc: t.server_desc,
+      filled: false,
+    },
+    {
+      index: "04",
+      href: "/community",
+      icon: Youtube,
+      title: t.fun_title,
+      desc: t.fun_desc,
+      filled: false,
+      badges: [
+        { icon: Radio, label: t.fun_badge_streams },
+        { icon: LayoutGrid, label: t.fun_badge_events },
+      ],
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--color-bg)] text-[var(--color-text)] transition-colors selection:bg-[var(--color-accent-blue)] selection:text-white">
@@ -264,85 +306,70 @@ export default function Home() {
       {/* ── CARDS ── */}
       <main className="grow px-4 sm:px-6 pb-16 sm:pb-24 md:pb-32">
         <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+          {cards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <Link
+                key={card.href}
+                href={card.href}
+                className="group relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[var(--color-card-bg)] p-6 sm:p-8 md:p-12 transition-all duration-300 hover:border-[var(--color-accent-blue)] hover:-translate-y-1 hover:shadow-[0_30px_70px_-15px_rgba(59,130,246,0.25)] flex flex-col justify-between min-h-[280px] sm:min-h-[360px] md:min-h-[420px]"
+              >
+                {/* фоновая иконка-вотермарк */}
+                <Icon
+                  size={160}
+                  strokeWidth={1}
+                  className="absolute -top-4 -right-4 opacity-[0.04] group-hover:opacity-[0.08] group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 pointer-events-none"
+                />
 
-          {/* Launcher */}
-          <Link
-            href="/launcher"
-            className="group relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[var(--color-card-bg)] p-6 sm:p-8 md:p-12 transition-all hover:border-[var(--color-accent-blue)] hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.2)] flex flex-col justify-between min-h-[280px] sm:min-h-[360px] md:min-h-[420px]"
-          >
-            <div className="absolute top-0 right-0 p-8 md:p-12 opacity-5 group-hover:opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all pointer-events-none">
-              <Download size={140} strokeWidth={1} />
-            </div>
+                {/* порядковый номер */}
+                <span className="absolute top-6 right-6 sm:top-8 sm:right-8 text-[11px] font-black tracking-[0.2em] text-[var(--color-text-gray)] opacity-30 group-hover:opacity-60 transition-opacity">
+                  {card.index}
+                </span>
 
-            <div className="relative z-10">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-6 sm:mb-8 md:mb-10 rounded-2xl bg-[var(--color-accent-blue)] text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-transform">
-                <Download size={28} strokeWidth={2.5} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-5xl font-[1000] mb-3 sm:mb-4 md:mb-6 uppercase italic tracking-tighter leading-none">
-                {t.launcher_title}
-              </h2>
-              <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-[300px]">
-                {t.launcher_desc}
-              </p>
-            </div>
+                <div className="relative z-10">
+                  <div
+                    className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-6 sm:mb-8 md:mb-10 rounded-2xl flex items-center justify-center transition-transform group-hover:rotate-6 ${
+                      card.filled
+                        ? "bg-[var(--color-accent-blue)] text-white shadow-lg shadow-blue-500/20"
+                        : "bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] border border-[var(--color-accent-blue)]/20"
+                    }`}
+                  >
+                    <Icon size={28} strokeWidth={2.5} />
+                  </div>
 
-            <div className="relative z-10 mt-6 sm:mt-8 flex items-center gap-3 text-xs sm:text-sm font-black uppercase italic tracking-wider text-[var(--color-accent-blue)] group-hover:translate-x-2 transition-transform">
-              {t.hint} <ArrowRight size={16} strokeWidth={3} />
-            </div>
-          </Link>
+                  <h2 className="text-2xl sm:text-3xl md:text-5xl font-[1000] mb-3 sm:mb-4 md:mb-6 uppercase italic tracking-tighter leading-none">
+                    {card.title}
+                  </h2>
 
-          {/* Concept Launcher */}
-          <Link
-            href="/concept"
-            className="group relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[var(--color-card-bg)] p-6 sm:p-8 md:p-12 transition-all hover:border-[var(--color-accent-blue)] hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.2)] flex flex-col justify-between min-h-[280px] sm:min-h-[360px] md:min-h-[420px]"
-          >
-            <div className="absolute top-0 right-0 p-8 md:p-12 opacity-5 group-hover:opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all pointer-events-none">
-              <Tv2 size={140} strokeWidth={1} />
-            </div>
+                  <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-[300px]">
+                    {card.desc}
+                  </p>
 
-            <div className="relative z-10">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-6 sm:mb-8 md:mb-10 rounded-2xl bg-[var(--color-accent-blue)] text-white flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:rotate-6 transition-transform">
-                <Tv2 size={28} strokeWidth={2.5} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-5xl font-[1000] mb-3 sm:mb-4 md:mb-6 uppercase italic tracking-tighter leading-none">
-                {t.concept_launcher_title}
-              </h2>
-              <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-[300px]">
-                {t.concept_launcher_desc}
-              </p>
-            </div>
+                  {/* бейджи (пока используются только карточкой «Развлечения») */}
+                  {card.badges && (
+                    <div className="flex flex-wrap gap-2 mt-4 sm:mt-5">
+                      {card.badges.map((b) => {
+                        const BadgeIcon = b.icon;
+                        return (
+                          <span
+                            key={b.label}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] text-[10px] font-black uppercase tracking-widest border border-[var(--color-accent-blue)]/20"
+                          >
+                            <BadgeIcon size={11} strokeWidth={2.5} />
+                            {b.label}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
-            <div className="relative z-10 mt-6 sm:mt-8 flex items-center gap-3 text-xs sm:text-sm font-black uppercase italic tracking-wider text-[var(--color-accent-blue)] group-hover:translate-x-2 transition-transform">
-              {t.hint} <ArrowRight size={16} strokeWidth={3} />
-            </div>
-          </Link>
-
-          {/* Server */}
-          <Link
-            href="/server"
-            className="group relative overflow-hidden rounded-[1.75rem] sm:rounded-[2.25rem] md:rounded-[3rem] border border-[var(--color-border-sharp)] bg-[var(--color-card-bg)] p-6 sm:p-8 md:p-12 transition-all hover:border-[var(--color-accent-blue)] hover:shadow-[0_30px_60px_-15px_rgba(59,130,246,0.2)] flex flex-col justify-between min-h-[280px] sm:min-h-[360px] md:min-h-[420px]"
-          >
-            <div className="absolute top-0 right-0 p-8 md:p-12 opacity-5 group-hover:opacity-10 group-hover:scale-110 group-hover:rotate-12 transition-all pointer-events-none">
-              <LayoutGrid size={140} strokeWidth={1} />
-            </div>
-
-            <div className="relative z-10">
-              <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 mb-6 sm:mb-8 md:mb-10 rounded-2xl bg-[var(--color-accent-blue)]/10 text-[var(--color-accent-blue)] flex items-center justify-center border border-[var(--color-accent-blue)]/20 group-hover:-rotate-6 transition-transform">
-                <LayoutGrid size={28} strokeWidth={2.5} />
-              </div>
-              <h2 className="text-2xl sm:text-3xl md:text-5xl font-[1000] mb-3 sm:mb-4 md:mb-6 uppercase italic tracking-tighter leading-none">
-                {t.server_title}
-              </h2>
-              <p className="text-[var(--color-text-gray)] text-sm sm:text-base md:text-lg leading-relaxed font-medium max-w-[300px]">
-                {t.server_desc}
-              </p>
-            </div>
-
-            <div className="relative z-10 mt-6 sm:mt-8 flex items-center gap-3 text-xs sm:text-sm font-black uppercase italic tracking-wider text-[var(--color-accent-blue)] group-hover:translate-x-2 transition-transform">
-              {t.hint} <ArrowRight size={16} strokeWidth={3} />
-            </div>
-          </Link>
-
+                <div className="relative z-10 mt-6 sm:mt-8 flex items-center gap-3 text-xs sm:text-sm font-black uppercase italic tracking-wider text-[var(--color-accent-blue)] group-hover:translate-x-2 transition-transform">
+                  {t.hint} <ArrowRight size={16} strokeWidth={3} />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </main>
 

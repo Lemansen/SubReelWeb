@@ -1,198 +1,165 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Globe, Monitor, Shield, Settings, LogOut, HelpCircle } from "lucide-react";
-
-// Локализация в стиле оригинальной игры
-const translations = {
-  RU: {
-    title: "SUBREEL",
-    singleplayer: "Одиночная игра (Лаунчер)",
-    multiplayer: "Сетевая игра (Сервер)",
-    realms: "Subreel Realms (В планах)",
-    options: "Настройки...",
-    quit: "Выйти из игры",
-    copyright: "Copyright Subreel Studio. Не является официальным продуктом Mojang.",
-    alert_dev: "Этот раздел находится в разработке!",
-  },
-  EN: {
-    title: "SUBREEL",
-    singleplayer: "Singleplayer (Launcher)",
-    multiplayer: "Multiplayer (Server)",
-    realms: "Subreel Realms (Planned)",
-    options: "Options...",
-    quit: "Quit Game",
-    copyright: "Copyright Subreel Studio. Not an official Mojang product.",
-    alert_dev: "This section is under development!",
-  }
-};
-
-const SPLASH_TEXTS = [
-  "В стиле Java Edition!",
-  "Пиксели рулят!",
-  "Subreel UI 2.0!",
-  "100% аутентично!",
-  "Попробуй навести на кнопку!",
-  "Тянет на максималках!",
-  "Включай шейдеры!",
-];
+import { useState } from "react";
 
 export default function MinecraftMainMenu() {
-  const [lang, setLang] = useState<"RU" | "EN">("RU");
-  const [splash, setSplash] = useState("");
-
-  const t = translations[lang];
-
-  useEffect(() => {
-    const randomText = SPLASH_TEXTS[Math.floor(Math.random() * SPLASH_TEXTS.length)];
-    setSplash(randomText);
-  }, [lang]);
-
-  const handleAction = (actionName: string, isAvailable = true) => {
-    if (!isAvailable) {
-      alert(t.alert_dev);
-      return;
-    }
+  const handleAction = (actionName: string) => {
     alert(`Действие: ${actionName}`);
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#141414] flex flex-col items-center justify-between p-4 font-mono select-none overflow-hidden">
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-between p-6 select-none overflow-hidden bg-[#121212] text-[#e0e0e0]">
       
-      {/* Стили для кастомных анимаций (Панорама и Сплэш) */}
+      {/* Стили для имитации текстуры кнопок Java Edition */}
       <style jsx global>{`
-        @keyframes mc-panorama {
-          0% { transform: scale(1.3) rotate(0deg); }
-          100% { transform: scale(1.3) rotate(360deg); }
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        .mc-font {
+          font-family: 'Press Start 2P', monospace;
         }
-        @keyframes mc-splash {
-          0%, 100% { transform: scale(1) rotate(-15deg); }
-          50% { transform: scale(1.12) rotate(-15deg); }
+        .mc-text-shadow {
+          text-shadow: 2px 2px 0px #000000;
         }
-        .animate-mc-panorama {
-          animation: mc-panorama 180s linear infinite;
+        /* Увеличенные аутентичные кнопки */
+        .mc-btn-large {
+          position: relative;
+          background-color: #4c321f; /* Характерный темно-древесный цвет интерфейса */
+          border: 2px solid #000000;
+          box-shadow: inset 3px 3px 0px #7d5738, inset -3px -3px 0px #21130a;
+          color: #e0e0e0;
+          font-family: 'Press Start 2P', monospace;
+          font-size: 13px; /* Крупный пиксельный шрифт */
+          text-align: center;
+          transition: all 0.05s ease;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          letter-spacing: 0.5px;
         }
-        .animate-mc-splash {
-          animation: mc-splash 0.5s ease-in-out infinite;
+        .mc-btn-large:hover {
+          background-color: #5c3e29;
+          color: #ffffff;
+          box-shadow: inset 3px 3px 0px #946946, inset -3px -3px 0px #331d10;
+          border-color: #ffffff;
+        }
+        .mc-btn-large:active {
+          box-shadow: inset -3px -3px 0px #7d5738, inset 3px 3px 0px #21130a;
+          padding-top: 3px;
         }
       `}</style>
 
-      {/* ── ФОН: Вращающаяся размытая панорама из Майнкрафта ── */}
+      {/* ── ФОН ИЗ СКРИНШОТА (Шейдеры, зимний биом) ── */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div 
-          className="absolute inset-0 bg-cover bg-center blur-md opacity-30 scale-125 animate-mc-panorama"
+          className="absolute inset-0 bg-cover bg-center brightness-[0.4] contrast-[1.1] scale-100"
           style={{ 
-            backgroundImage: `url('https://images.unsplash.com/photo-1627856013091-fed6e4e30025?q=80&w=2000')` 
+            // Реалистичный зимний ночной пейзаж деревни
+            backgroundImage: `url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2000')` 
           }}
         />
-        {/* Фирменное темное виньетирование поверх панорамы */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/60 mix-blend-multiply" />
+        {/* Мягкое виньетирование */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60" />
       </div>
 
-      {/* ── ВЕРХНЯЯ ЧАСТЬ: ДВУХСЛОЙНЫЙ 3D ЛОГОТИП И ЖЕЛТЫЙ ТЕКСТ ── */}
-      <div className="relative mt-16 md:mt-24 flex flex-col items-center z-10">
-        {/* Главный заголовок с жесткими пиксельными тенями в стиле блоков */}
-        <h1 
-          className="text-6xl md:text-9xl font-[1000] tracking-widest text-[#eeeeee] uppercase italic text-center drop-shadow-[5px_5px_0px_#1e3a8a]"
-          style={{
-            textShadow: "4px 4px 0px #000000, 8px 8px 0px #1d4ed8"
+      {/* ── ВЕРХ: МЕСТО ПОД PNG ЛОГОТИП СЕLESTIA 3.0 ── */}
+      <div className="relative mt-16 flex flex-col items-center z-10 w-full max-w-[550px]">
+        {/* Замени src на путь к твоему готовому прозрачному PNG-файлу с логотипом.
+          h-auto и w-full автоматически адаптируют изображение под ширину.
+        */}
+        <img 
+          src="/path-to-your-celestia-logo.png" 
+          alt="CELESTIA 3.0 LOGO" 
+          className="w-full h-auto drop-shadow-[0_8px_12px_rgba(0,0,0,0.65)] select-none pointer-events-none"
+          onError={(e) => {
+            // Резервный плейсхолдер, если картинка не загрузится (чтобы не было пустого места)
+            e.currentTarget.style.display = 'none';
+            const backup = document.getElementById('backup-logo');
+            if (backup) backup.style.display = 'flex';
           }}
-        >
-          {t.title}
-        </h1>
+        />
         
-        {/* Пульсирующий желтый сплэш-текст */}
-        {splash && (
-          <div className="absolute -bottom-5 right-[-10px] md:right-[-40px] transform origin-center z-20 animate-mc-splash">
-            <span 
-              className="text-[#ffff55] text-xs md:text-base font-black tracking-wider uppercase drop-shadow-[2px_2px_0px_#3f3f00]"
-              style={{ textShadow: "2px 2px 0px #3f3f00" }}
-            >
-              {splash}
-            </span>
+        {/* Резервный стилизованный текстовый блок (пока картинки нет) */}
+        <div id="backup-logo" className="hidden flex-col items-center mc-font select-none">
+          <div className="text-[#fbaa29] text-5xl md:text-7xl font-bold tracking-tight" style={{ textShadow: "4px 4px 0px #3a1a05, 6px 6px 0px #000000" }}>
+            CELESTIA
           </div>
-        )}
+          <div className="text-[#fbaa29] text-4xl md:text-5xl font-bold tracking-tight mt-2" style={{ textShadow: "4px 4px 0px #3a1a05, 6px 6px 0px #000000" }}>
+            3.0
+          </div>
+        </div>
       </div>
 
-      {/* ── ЦЕНТР: СТРУКТУРА КНОПОК 1-В-1 КАК В ИГРЕ ── */}
-      <div className="w-full max-w-sm md:max-w-lg flex flex-col gap-3 z-10 px-4 my-auto">
+      {/* ── ЦЕНТР: МАССИВНАЯ СЕТКА КНОПОК ОДИН В ОДИН С ФОТО ── */}
+      {/* Максимальная ширина увеличена до 480px, кнопки стали крупнее и солиднее */}
+      <div className="w-full max-w-[480px] flex flex-col z-10 px-4 mb-20 gap-3">
         
         {/* Кнопка 1: Одиночная игра */}
-        <button
-          onClick={() => handleAction("Singleplayer")}
-          className="relative w-full h-11 bg-[#6c6c6c] border-2 border-black text-[#e0e0e0] font-bold uppercase text-sm tracking-wide shadow-[inset_2px_2px_0px_#afafaf,inset_-2px_-2px_0px_#3f3f3f] transition-all hover:bg-[#4a5fbf] hover:text-[#ffffa0] hover:shadow-[inset_2px_2px_0px_#7ca0ff,inset_-2px_-2px_0px_#233175] active:pt-1 active:shadow-[inset_-2px_-2px_0px_#afafaf,inset_2px_2px_0px_#3f3f3f]"
-        >
-          <div className="flex items-center justify-center gap-2 drop-shadow-[2px_2px_0px_#000]">
-            <Monitor size={16} className="opacity-60" />
-            {t.singleplayer}
+        <button onClick={() => handleAction("Singleplayer")} className="mc-btn-large w-full h-12">
+          <div className="flex items-center gap-3 mc-text-shadow">
+            <span className="text-[12px]">🟫</span>
+            <span>Одиночная игра</span>
+            <span className="text-[12px]">🟫</span>
           </div>
         </button>
 
         {/* Кнопка 2: Сетевая игра */}
-        <button
-          onClick={() => handleAction("Multiplayer")}
-          className="relative w-full h-11 bg-[#6c6c6c] border-2 border-black text-[#e0e0e0] font-bold uppercase text-sm tracking-wide shadow-[inset_2px_2px_0px_#afafaf,inset_-2px_-2px_0px_#3f3f3f] transition-all hover:bg-[#4a5fbf] hover:text-[#ffffa0] hover:shadow-[inset_2px_2px_0px_#7ca0ff,inset_-2px_-2px_0px_#233175] active:pt-1 active:shadow-[inset_-2px_-2px_0px_#afafaf,inset_2px_2px_0px_#3f3f3f]"
-        >
-          <div className="flex items-center justify-center gap-2 drop-shadow-[2px_2px_0px_#000]">
-            <Shield size={16} className="opacity-60" />
-            {t.multiplayer}
+        <button onClick={() => handleAction("Multiplayer")} className="mc-btn-large w-full h-12">
+          <div className="flex items-center gap-3 mc-text-shadow">
+            <span className="text-[12px]">🏹</span>
+            <span>Сетевая игра</span>
+            <span className="text-[12px]">🏹</span>
           </div>
         </button>
 
-        {/* Кнопка 3: Realms (Недоступна) */}
-        <button
-          onClick={() => handleAction("Realms", false)}
-          className="relative w-full h-11 bg-[#3a3a3a] border-2 border-[#262626] text-[#7a7a7a] font-bold uppercase text-sm tracking-wide shadow-[inset_2px_2px_0px_#4a4a4a,inset_-2px_-2px_0px_#1a1a1a] opacity-60 cursor-not-allowed"
-        >
-          <div className="flex items-center justify-center gap-2 drop-shadow-[2px_2px_0px_#000]">
-            {t.realms}
-          </div>
-        </button>
+        {/* Пробел-разделитель между основными кнопками и нижним блоком моддинга */}
+        <div className="h-10" />
 
-        {/* Сет Нижних Кнопок: [Язык] [Настройки...] [Выход] */}
-        <div className="flex gap-3 w-full mt-2">
-          
-          {/* Маленькая квадратная кнопка выбора языка (Глобус) */}
-          <button
-            onClick={() => setLang(lang === "RU" ? "EN" : "RU")}
-            title="Сменить язык / Switch Language"
-            className="relative w-11 h-11 bg-[#6c6c6c] border-2 border-black text-[#e0e0e0] flex items-center justify-center shrink-0 shadow-[inset_2px_2px_0px_#afafaf,inset_-2px_-2px_0px_#3f3f3f] transition-all hover:bg-[#4a5fbf] hover:text-[#ffffa0] hover:shadow-[inset_2px_2px_0px_#7ca0ff,inset_-2px_-2px_0px_#233175] active:pt-1"
-          >
-            <Globe size={18} className="drop-shadow-[2px_2px_0px_#000]" />
+        {/* Блок: МОДЫ с боковыми квадратными кнопками */}
+        <div className="flex gap-2 w-full">
+          {/* Левый квадрат (Очки) */}
+          <button onClick={() => handleAction("Goggles")} className="mc-btn-large w-12 h-12 shrink-0">
+            <span className="mc-text-shadow text-base">👓</span>
           </button>
-
-          {/* Настройки */}
-          <button
-            onClick={() => handleAction("Options")}
-            className="relative grow h-11 bg-[#6c6c6c] border-2 border-black text-[#e0e0e0] font-bold uppercase text-xs sm:text-sm tracking-wide shadow-[inset_2px_2px_0px_#afafaf,inset_-2px_-2px_0px_#3f3f3f] transition-all hover:bg-[#4a5fbf] hover:text-[#ffffa0] hover:shadow-[inset_2px_2px_0px_#7ca0ff,inset_-2px_-2px_0px_#233175] active:pt-1"
-          >
-            <div className="flex items-center justify-center gap-2 drop-shadow-[2px_2px_0px_#000]">
-              <Settings size={14} className="opacity-60" />
-              {t.options}
+          
+          {/* Центр: Кнопка Моды */}
+          <button onClick={() => handleAction("Mods")} className="mc-btn-large grow h-12">
+            <div className="flex items-center gap-4 mc-text-shadow">
+              <span>Моды</span>
+              <span className="text-[#55ffff] text-[11px]">💎</span>
             </div>
           </button>
 
-          {/* Выход из игры */}
-          <button
-            onClick={() => handleAction("Quit")}
-            className="relative grow h-11 bg-[#6c6c6c] border-2 border-black text-[#e0e0e0] font-bold uppercase text-xs sm:text-sm tracking-wide shadow-[inset_2px_2px_0px_#afafaf,inset_-2px_-2px_0px_#3f3f3f] transition-all hover:bg-[#b91c1c] hover:text-[#ffffa0] hover:shadow-[inset_2px_2px_0px_#ef4444,inset_-2px_-2px_0px_#7f1d1d] active:pt-1"
-          >
-            <div className="flex items-center justify-center gap-2 drop-shadow-[2px_2px_0px_#000]">
-              <LogOut size={14} className="opacity-60" />
-              {t.quit}
+          {/* Правый квадрат (Фигурка Стива) */}
+          <button onClick={() => handleAction("Skin")} className="mc-btn-large w-12 h-12 shrink-0">
+            <span className="mc-text-shadow text-base">🧍</span>
+          </button>
+        </div>
+
+        {/* Самый нижний ряд: Настройки и Выход */}
+        <div className="flex gap-3 w-full">
+          {/* Настройки... */}
+          <button onClick={() => handleAction("Options")} className="mc-btn-large flex-1 h-12">
+            <div className="flex items-center gap-2 mc-text-shadow">
+              <span className="text-[11px] opacity-75">⚙️</span>
+              <span>Настройки...</span>
+            </div>
+          </button>
+
+          {/* Выйти из игры */}
+          <button onClick={() => handleAction("Quit")} className="mc-btn-large flex-1 h-12">
+            <div className="flex items-center gap-2 mc-text-shadow">
+              <span>Выйти из игры</span>
+              <span className="text-[11px] opacity-75">🚪</span>
             </div>
           </button>
         </div>
 
       </div>
 
-      {/* ── НИЖНЯЯ ПАНЕЛЬ И СЛУЖЕБНЫЕ НАДПИСИ ── */}
-      <div className="w-full max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-[11px] text-zinc-400 font-bold tracking-wider z-10">
-        <div className="drop-shadow-[1.5px_1.5px_0px_#000]">
-          Subreel Minecraft-Edition <span className="text-[#55ff55]">v1.20.26-Beta</span>
-        </div>
-        <div className="text-center sm:text-right max-w-md opacity-70 drop-shadow-[1.5px_1.5px_0px_#000]">
-          {t.copyright}
+      {/* ── НИЗ: СТРОКА С КОПИРАЙТОМ MOJANG ── */}
+      <div className="w-full flex justify-end items-center z-10 px-4 pb-2 mc-font text-[11px] text-[#b0b0b0]">
+        <div className="mc-text-shadow tracking-wide select-none opacity-85">
+          Copyright Mojang AB. Do not distribute!
         </div>
       </div>
 
